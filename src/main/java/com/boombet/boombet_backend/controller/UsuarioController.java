@@ -15,7 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/users")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
@@ -27,7 +27,7 @@ public class UsuarioController {
 
     }
 
-    @PostMapping("/register")
+    @PostMapping("/auth/register")
     public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegistroRequestDTO credsUsuario) {
         try {
             return ResponseEntity.ok(usuarioService.register(credsUsuario));
@@ -36,7 +36,7 @@ public class UsuarioController {
         }
     }
 
-    @PostMapping("/login")
+    @PostMapping("/auth/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO credsUsuario) {
         try {
             return ResponseEntity.ok(usuarioService.login(credsUsuario));
@@ -68,12 +68,19 @@ public class UsuarioController {
 
 
     @PostMapping("/startAffiliate")
-    //En lugar de MAP<> puedo hacer un DTO que me permita validar los datos antes de pasarlos a la request
-    public ResponseEntity<Void> startAffiliate(@RequestBody Map<String, Object> payload) {
-        // Como el método del servicio es @Async, esta línea se ejecuta instantáneamente
-        try{
-            usuarioService.startAffiliate(payload);
-        }catch(IllegalArgumentException e){
+    public ResponseEntity<Void> startAffiliate(@RequestBody Map<String, Object> rootPayload) {
+
+        Map<String, Object> playerData = (Map<String, Object>) rootPayload.get("playerData");
+
+        String websocketLink = (String) rootPayload.get("websocketLink");
+
+        if (playerData == null || websocketLink == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        try {
+            usuarioService.startAffiliate(playerData, websocketLink);
+        } catch(IllegalArgumentException e) {
             throw new IllegalArgumentException(e);
         }
 

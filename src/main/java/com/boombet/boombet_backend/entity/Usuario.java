@@ -64,11 +64,11 @@ public class Usuario implements UserDetails {
     @Enumerated(EnumType.STRING)
     Role role;
 
+    @NotNull
+    @Column(nullable=false)
+    private String username;
 
 
-    public String getUsername() {
-        return email;
-    }
 
     //JWT
     @Override

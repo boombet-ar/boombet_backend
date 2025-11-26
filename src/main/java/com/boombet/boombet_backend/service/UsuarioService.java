@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -69,7 +70,7 @@ public class UsuarioService {
             throw new IllegalArgumentException("Ya existe una cuenta con este correo");
         }
 
-
+        nuevoUsuario.setUsername(credsUsuario.getUsername());
         nuevoUsuario.setPassword(hashedPass);
         nuevoUsuario.setRole(Usuario.Role.USER);
         nuevoUsuario.setDni(credsUsuario.getDni());
@@ -107,7 +108,7 @@ public class UsuarioService {
 
 
     @Async
-    public void startAffiliate(Map<String, Object> playerData){
+    public void startAffiliate(Map<String, Object> playerData, String websocketLink){
 
         if (playerData == null || !playerData.containsKey("provincia")) {
             throw new IllegalArgumentException("No se encontró provincia en playerData");
@@ -129,15 +130,18 @@ public class UsuarioService {
                 return;
             }
 
-            System.out.println(playerData);
-            System.out.println(provinciaAlias);
+            Map<String, Object> requestBody = new HashMap<>();
+
+            requestBody.put("playerData", playerData);
+
+            requestBody.put("websocketLink", websocketLink);
 
             restClient.post()
                     .uri("/register/" + provinciaAlias)
                     .header("register_key", affiliatorToken)
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
-                    .body(playerData)
+                    .body(requestBody)
                     .retrieve()
                     .toBodilessEntity();
         }catch (Exception e) {

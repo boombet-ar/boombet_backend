@@ -16,6 +16,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RegistroRequestDTO {
 
+    @NotBlank(message = "El nombre de usuario es obligatorio")
+    private String username;
+
     @NotBlank(message = "El correo es obligatorio")
     private String email;
 
