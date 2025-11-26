@@ -64,7 +64,7 @@ public class UsuarioService {
 
         Usuario nuevoUsuario = new Usuario();
 
-        Object playerData = datadashService.getUserData(credsUsuario.getDni(), credsUsuario.getGenero());
+        Object playerData = datadashService.getUserData(credsUsuario);
 
         if (usuarioRepository.existsByEmail(credsUsuario.getEmail())) {
             throw new IllegalArgumentException("Ya existe una cuenta con este correo");

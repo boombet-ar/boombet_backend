@@ -49,11 +49,11 @@ public class UsuarioController {
     }
 
 
-    @PostMapping("/userData")
-    public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestBody DatadashDTO.UserDataRequest input) {
+    @PostMapping("/auth/userData")
+    public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestBody RegistroRequestDTO input) {
         try {
 
-            var response = datadashService.getUserData(input.dni(), input.genero());
+            var response = datadashService.getUserData(input);
 
             return ResponseEntity.ok(response);
 

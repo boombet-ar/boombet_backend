@@ -2,6 +2,7 @@ package com.boombet.boombet_backend.utils;
 
 
 import com.boombet.boombet_backend.dto.DatadashDTO;
+import com.boombet.boombet_backend.dto.RegistroRequestDTO;
 import lombok.Builder;
 import org.springframework.context.annotation.Bean;
 
@@ -11,7 +12,12 @@ import java.util.regex.Pattern;
 
 public class UsuarioUtils {
 
-    public static String generarCuit(String dni, char sexo) {
+    public static String generarCuit(RegistroRequestDTO input) {
+
+
+        String dni = input.getDni();
+        Character sexo = input.getGenero();
+
         if (dni == null || dni.length() < 7 || dni.length() > 8) {
             throw new IllegalArgumentException("El DNI debe tener 7 u 8 dígitos.");
         }
