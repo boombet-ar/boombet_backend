@@ -5,13 +5,11 @@ package com.boombet.boombet_backend.service;
 import com.boombet.boombet_backend.dao.UsuarioRepository;
 
 import com.boombet.boombet_backend.dto.AuthResponseDTO;
-import com.boombet.boombet_backend.dto.DatadashDTO;
 import com.boombet.boombet_backend.dto.LoginRequestDTO;
 import com.boombet.boombet_backend.dto.RegistroRequestDTO;
+import com.boombet.boombet_backend.dto.UserDataDTO;
 import com.boombet.boombet_backend.entity.Usuario;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -60,23 +58,25 @@ public class UsuarioService {
     }
 
     public AuthResponseDTO register(RegistroRequestDTO credsUsuario){
-        String hashedPass = passwordEncoder.encode(credsUsuario.getPassword()); //Hashed password
+        UserDataDTO userData = credsUsuario.getUserData();
+
+        String hashedPass = passwordEncoder.encode(userData.getPassword()); //Hashed password
 
         Usuario nuevoUsuario = new Usuario();
 
-        Object playerData = datadashService.getUserData(credsUsuario);
+        Object playerData = datadashService.getUserData(userData);
 
-        if (usuarioRepository.existsByEmail(credsUsuario.getEmail())) {
+        if (usuarioRepository.existsByEmail(userData.getEmail())) {
             throw new IllegalArgumentException("Ya existe una cuenta con este correo");
         }
 
-        nuevoUsuario.setUsername(credsUsuario.getUsername());
+        nuevoUsuario.setUsername(userData.getUsername());
         nuevoUsuario.setPassword(hashedPass);
         nuevoUsuario.setRole(Usuario.Role.USER);
-        nuevoUsuario.setDni(credsUsuario.getDni());
-        nuevoUsuario.setEmail(credsUsuario.getEmail());
-        nuevoUsuario.setGenero(credsUsuario.getGenero());
-        nuevoUsuario.setTelefono(credsUsuario.getTelefono());
+        nuevoUsuario.setDni(userData.getDni());
+        nuevoUsuario.setEmail(userData.getEmail());
+        nuevoUsuario.setGenero(userData.getGenero());
+        nuevoUsuario.setTelefono(userData.getTelefono());
         usuarioRepository.save(nuevoUsuario);
 
         AuthResponseDTO registerResult = AuthResponseDTO.builder()
@@ -112,7 +112,6 @@ public class UsuarioService {
 
         if (playerData == null || !playerData.containsKey("provincia")) {
             throw new IllegalArgumentException("No se encontró provincia en playerData");
-
         }
         /*Recibe los datos ya confirmados del jugador, y con esos datos empieza la afiliacion
         * utilizando la api de afiliaciones. devuelve 200 instantaneamente para no trabar la app. */

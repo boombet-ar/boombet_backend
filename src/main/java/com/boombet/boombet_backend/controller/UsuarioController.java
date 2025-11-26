@@ -1,9 +1,6 @@
 package com.boombet.boombet_backend.controller;
-import com.boombet.boombet_backend.dto.AuthResponseDTO;
-import com.boombet.boombet_backend.dto.LoginRequestDTO;
-import com.boombet.boombet_backend.dto.RegistroRequestDTO;
+import com.boombet.boombet_backend.dto.*;
 
-import com.boombet.boombet_backend.dto.DatadashDTO;
 import com.boombet.boombet_backend.service.DatadashService;
 import com.boombet.boombet_backend.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -50,7 +47,7 @@ public class UsuarioController {
 
 
     @PostMapping("/auth/userData")
-    public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestBody RegistroRequestDTO input) {
+    public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestBody UserDataDTO input) {
         try {
 
             var response = datadashService.getUserData(input);

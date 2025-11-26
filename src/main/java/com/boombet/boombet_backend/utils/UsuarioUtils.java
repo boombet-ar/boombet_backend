@@ -1,18 +1,12 @@
 package com.boombet.boombet_backend.utils;
 
 
-import com.boombet.boombet_backend.dto.DatadashDTO;
-import com.boombet.boombet_backend.dto.RegistroRequestDTO;
-import lombok.Builder;
-import org.springframework.context.annotation.Bean;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.boombet.boombet_backend.dto.UserDataDTO;
 
 
 public class UsuarioUtils {
 
-    public static String generarCuit(RegistroRequestDTO input) {
+    public static String generarCuit(UserDataDTO input) {
 
 
         String dni = input.getDni();
