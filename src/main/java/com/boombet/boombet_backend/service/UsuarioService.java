@@ -90,12 +90,12 @@ public class UsuarioService {
     public AuthResponseDTO login(LoginRequestDTO request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        request.getIdentifier(),
                         request.getPassword()
                 )
         );
 
-        Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
+        Usuario usuario = usuarioRepository.findByUsernameOrEmail(request.getIdentifier(), request.getIdentifier())
                 .orElseThrow();
 
         String token = jwtService.getToken(usuario);
