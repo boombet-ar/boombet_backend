@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/users/auth/**").permitAll() //libera los endpoints de autenticacion
                         .requestMatchers("/error").permitAll() //libera los endpoints de error
+                        .requestMatchers("/api/webhooks/notify-socket").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

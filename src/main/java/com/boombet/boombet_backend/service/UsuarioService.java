@@ -102,6 +102,8 @@ public class UsuarioService {
             }
         }
 
+        //Falta agregar que cree el jugador y lo asocie con un usuario
+
         return AuthResponseDTO.builder()
                 .token(jwtService.getToken(nuevoUsuario))
                 .playerData(dataDashResponse)
