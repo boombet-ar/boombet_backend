@@ -2,7 +2,6 @@ package com.boombet.boombet_backend.dto;
 
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -14,7 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserDataDTO {
+public class UserDataRequestDTO {
 
     @NotBlank(message = "El nombre de usuario es obligatorio")
     private String username;
@@ -30,8 +29,8 @@ public class UserDataDTO {
     @Pattern(regexp = "\\d+", message = "El DNI solo debe contener números")
     private String dni;
 
-    @NotNull(message = "El género es obligatorio")
-    private Character genero;
+    @NotBlank(message = "El género es obligatorio")
+    private String genero;
 
     @NotBlank(message = "El teléfono es obligatorio")
     private String telefono;

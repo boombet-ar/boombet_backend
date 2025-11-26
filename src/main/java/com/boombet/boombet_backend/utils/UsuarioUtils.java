@@ -1,16 +1,16 @@
 package com.boombet.boombet_backend.utils;
 
 
-import com.boombet.boombet_backend.dto.UserDataDTO;
+import com.boombet.boombet_backend.dto.UserDataRequestDTO;
 
 
 public class UsuarioUtils {
 
-    public static String generarCuit(UserDataDTO input) {
+    public static String generarCuit(UserDataRequestDTO input) {
 
 
         String dni = input.getDni();
-        Character sexo = input.getGenero();
+        String sexo = input.getGenero();
 
         if (dni == null || dni.length() < 7 || dni.length() > 8) {
             throw new IllegalArgumentException("El DNI debe tener 7 u 8 dígitos.");
@@ -20,7 +20,7 @@ public class UsuarioUtils {
         String dniNormalizado = String.format("%8s", dni).replace(' ', '0');
 
 
-        int prefijo = (Character.toUpperCase(sexo) == 'F') ? 27 : 20;
+        int prefijo = (sexo == "Femenino") ? 27 : 20;
 
 
         String cuitBase = prefijo + dniNormalizado;

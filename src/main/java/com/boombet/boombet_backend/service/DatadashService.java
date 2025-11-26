@@ -1,7 +1,7 @@
 package com.boombet.boombet_backend.service;
 
 import com.boombet.boombet_backend.dto.DatadashDTO;
-import com.boombet.boombet_backend.dto.UserDataDTO;
+import com.boombet.boombet_backend.dto.UserDataRequestDTO;
 import com.boombet.boombet_backend.security.DatadashAuth;
 import com.boombet.boombet_backend.utils.UsuarioUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,7 +25,7 @@ public class DatadashService {
     }
 
 
-    public DatadashDTO.DatadashInformResponse getUserData(UserDataDTO input) {
+    public DatadashDTO.DatadashInformResponse getUserData(UserDataRequestDTO input) {
 
         String cuil = UsuarioUtils.generarCuit(input);
         DatadashDTO.DatadashInformRequest requestBody = new DatadashDTO.DatadashInformRequest(cuil);

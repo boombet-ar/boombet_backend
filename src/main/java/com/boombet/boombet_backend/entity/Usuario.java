@@ -54,7 +54,7 @@ public class Usuario implements UserDetails {
 
     @NotNull
     @Column(nullable=false)
-    private Character genero;
+    private String genero;
 
     @NotNull
     @Column(nullable=false)

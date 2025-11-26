@@ -2,6 +2,7 @@ package com.boombet.boombet_backend.dto;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 
 import java.util.Map;
 
@@ -57,6 +58,9 @@ public class DatadashDTO {
     public record AuthResponseWrapper(
             @JsonProperty("token") TokenData token
     ) {}
+
+
+
 
     public record TokenData(
             @JsonProperty("access_token") String accessToken,

@@ -9,8 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/users")
 public class UsuarioController {
@@ -47,7 +45,7 @@ public class UsuarioController {
 
 
     @PostMapping("/auth/userData")
-    public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestBody UserDataDTO input) {
+    public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestBody UserDataRequestDTO input) {
         try {
 
             var response = datadashService.getUserData(input);
@@ -64,24 +62,6 @@ public class UsuarioController {
     }
 
 
-    @PostMapping("/startAffiliate")
-    public ResponseEntity<Void> startAffiliate(@RequestBody Map<String, Object> rootPayload) {
 
-        Map<String, Object> playerData = (Map<String, Object>) rootPayload.get("playerData");
-
-        String websocketLink = (String) rootPayload.get("websocketLink");
-
-        if (playerData == null || websocketLink == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        try {
-            usuarioService.startAffiliate(playerData, websocketLink);
-        } catch(IllegalArgumentException e) {
-            throw new IllegalArgumentException(e);
-        }
-
-        return ResponseEntity.ok().build();
-    }
 
 }
