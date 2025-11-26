@@ -12,6 +12,7 @@ public class UsuarioUtils {
         String dni = input.getDni();
         String sexo = input.getGenero();
 
+        System.out.println(sexo);
         if (dni == null || dni.length() < 7 || dni.length() > 8) {
             throw new IllegalArgumentException("El DNI debe tener 7 u 8 dígitos.");
         }
@@ -20,7 +21,9 @@ public class UsuarioUtils {
         String dniNormalizado = String.format("%8s", dni).replace(' ', '0');
 
 
-        int prefijo = (sexo == "Femenino") ? 27 : 20;
+        boolean esMujer = sexo != null && (sexo.equalsIgnoreCase("Femenino") || sexo.equalsIgnoreCase("F"));
+
+        int prefijo = esMujer ? 27 : 20;
 
 
         String cuitBase = prefijo + dniNormalizado;

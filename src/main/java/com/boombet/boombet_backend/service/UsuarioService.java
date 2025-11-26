@@ -3,6 +3,7 @@ package com.boombet.boombet_backend.service;
 import com.boombet.boombet_backend.dao.UsuarioRepository;
 import com.boombet.boombet_backend.dto.*;
 import com.boombet.boombet_backend.entity.Usuario;
+import com.boombet.boombet_backend.utils.UsuarioUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,7 +31,7 @@ public class UsuarioService {
     @Lazy
     private UsuarioService self;
 
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository usuarioRepository;
@@ -47,13 +48,13 @@ public class UsuarioService {
             DatadashService datadashService,
             @Qualifier("affiliatorRestClient") RestClient restClient
     ){
+        this.jdbcTemplate = jdbcTemplate;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.usuarioRepository = usuarioRepository;
         this.authenticationManager = authenticationManager;
         this.datadashService = datadashService;
         this.restClient = restClient;
-        this.jdbcTemplate = jdbcTemplate;
     }
 
     public AuthResponseDTO register(RegistroRequestDTO inputWrapper) {
@@ -64,12 +65,19 @@ public class UsuarioService {
             throw new IllegalArgumentException("Ya existe una cuenta con este correo");
         }
 
-        AffiliationDTO dataDashResponse = datadashService.getUserData(userData);
+        UserDataRequestDTO requestForDatadash = UserDataRequestDTO.builder()
+                .dni(userData.getDni())
+                .genero(userData.getGenero())
+                .email(userData.getEmail())
+                .password(userData.getPassword())
+                .telefono(userData.getTelefono())
+                .username(userData.getUser())
+                .build();
 
-        DatadashDTO.DatosPersonales datosPersonales = null;
-        if (dataDashResponse.() != null && !dataDashResponse.datos().isEmpty()) {
-            datosPersonales = dataDashResponse.datos().get(0);
-        }
+        String cuitGenerado = UsuarioUtils.generarCuit(requestForDatadash);
+        userData.setCuit(cuitGenerado);
+
+        DatadashDTO.DatadashInformResponse dataDashResponse = datadashService.getUserData(requestForDatadash);
 
         String hashedPass = passwordEncoder.encode(userData.getPassword());
         Usuario nuevoUsuario = new Usuario();
@@ -84,12 +92,11 @@ public class UsuarioService {
 
         usuarioRepository.save(nuevoUsuario);
 
-        // 4. DISPARAR AFILIACIÓN ASÍNCRONA (NON-BLOCKING)
-        if (datosPersonales != null && websocketLink != null && !websocketLink.isEmpty()) {
-            // Usamos 'self' para invocar el método a través del proxy de Spring.
-            // Esto asegura que se ejecute en un hilo separado y register retorne INMEDIATAMENTE.
+        // 5. DISPARAR AFILIACIÓN ASÍNCRONA (Enviando los datos del usuario, no los de DataDash)
+        if (websocketLink != null && !websocketLink.isEmpty()) {
             try {
-                self.iniciarAfiliacionAsync(datosPersonales, websocketLink);
+                // Pasamos el DTO userData que tiene email, user, pass, cuit, etc.
+                self.iniciarAfiliacionAsync(userData, websocketLink);
             } catch (Exception e) {
                 System.err.println("Error al intentar iniciar la tarea asíncrona: " + e.getMessage());
             }
@@ -101,19 +108,21 @@ public class UsuarioService {
                 .build();
     }
 
-
+    // CAMBIO: Recibe AffiliationDTO en lugar de DatosPersonales
     @Async
-    public void iniciarAfiliacionAsync(DatadashDTO.DatosPersonales datosPersonales, String websocketLink) {
+    public void iniciarAfiliacionAsync(AffiliationDTO datosAfiliacion, String websocketLink) {
         System.out.println("---- INICIANDO AFILIACIÓN EN HILO ASÍNCRONO ----");
+        System.out.println("CUIT Enviado: " + datosAfiliacion.getCuit());
 
         try {
-            String nombreProvincia = datosPersonales.provincia();
+            String nombreProvincia = datosAfiliacion.getProvincia();
 
             if (nombreProvincia == null) {
                 System.err.println("Afiliación fallida: No hay provincia en los datos.");
                 return;
             }
 
+            // Buscar alias de provincia
             String query = "SELECT alias FROM provincias WHERE nombre = ?";
             String provinciaAlias;
             try {
@@ -123,8 +132,10 @@ public class UsuarioService {
                 return;
             }
 
+            // Construir payload
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("playerData", datosPersonales);
+            // Aquí enviamos el objeto que tiene user, password, email, nombre, apellido...
+            requestBody.put("playerData", datosAfiliacion);
             requestBody.put("websocketLink", websocketLink);
 
             restClient.post()
@@ -140,7 +151,6 @@ public class UsuarioService {
 
         } catch (Exception e) {
             System.err.println("Error en afiliación asíncrona: " + e.getMessage());
-
         }
     }
 
