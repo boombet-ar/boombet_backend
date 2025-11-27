@@ -2,6 +2,7 @@ package com.boombet.boombet_backend.service;
 
 import com.boombet.boombet_backend.dao.UsuarioRepository;
 import com.boombet.boombet_backend.dto.*;
+import com.boombet.boombet_backend.entity.Jugador;
 import com.boombet.boombet_backend.entity.Usuario;
 import com.boombet.boombet_backend.utils.UsuarioUtils;
 
@@ -38,6 +39,7 @@ public class UsuarioService {
     private final AuthenticationManager authenticationManager;
     private final DatadashService datadashService;
     private final RestClient restClient;
+    private final JugadorService jugadorService;
 
     public UsuarioService(
             JdbcTemplate jdbcTemplate,
@@ -46,8 +48,10 @@ public class UsuarioService {
             UsuarioRepository usuarioRepository,
             AuthenticationManager authenticationManager,
             DatadashService datadashService,
+            JugadorService jugadorService,
             @Qualifier("affiliatorRestClient") RestClient restClient
     ){
+        this.jugadorService = jugadorService;
         this.jdbcTemplate = jdbcTemplate;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
@@ -57,7 +61,16 @@ public class UsuarioService {
         this.restClient = restClient;
     }
 
+
     public AuthResponseDTO register(RegistroRequestDTO inputWrapper) {
+        /*
+        * Hashea la contraseña
+        * Hace la solicitud a datadash y recibe datos del usuario
+        * Crea un jugador y lo vincula con el usuario
+        * Hace la solicitud a la api de afiliaciones para empezar la afiliación
+        * Devuelve los datos del jugador y el link del websocket(que viene del front)
+        * Con ese link de websocket se notificará al front el estado de las afiliaciones.
+        * */
         AffiliationDTO userData = inputWrapper.getConfirmedData();
         String websocketLink = inputWrapper.getWebsocketLink();
 
@@ -65,19 +78,8 @@ public class UsuarioService {
             throw new IllegalArgumentException("Ya existe una cuenta con este correo");
         }
 
-        UserDataRequestDTO requestForDatadash = UserDataRequestDTO.builder()
-                .dni(userData.getDni())
-                .genero(userData.getGenero())
-                .email(userData.getEmail())
-                .password(userData.getPassword())
-                .telefono(userData.getTelefono())
-                .username(userData.getUser())
-                .build();
+        Jugador jugador = jugadorService.crearJugador(userData);
 
-        String cuitGenerado = UsuarioUtils.generarCuit(requestForDatadash);
-        userData.setCuit(cuitGenerado);
-
-        DatadashDTO.DatadashInformResponse dataDashResponse = datadashService.getUserData(requestForDatadash);
 
         String hashedPass = passwordEncoder.encode(userData.getPassword());
         Usuario nuevoUsuario = new Usuario();
@@ -89,28 +91,23 @@ public class UsuarioService {
         nuevoUsuario.setEmail(userData.getEmail());
         nuevoUsuario.setGenero(userData.getGenero());
         nuevoUsuario.setTelefono(userData.getTelefono());
-
+        nuevoUsuario.setJugador(jugador);
         usuarioRepository.save(nuevoUsuario);
 
-        // 5. DISPARAR AFILIACIÓN ASÍNCRONA (Enviando los datos del usuario, no los de DataDash)
         if (websocketLink != null && !websocketLink.isEmpty()) {
             try {
-                // Pasamos el DTO userData que tiene email, user, pass, cuit, etc.
                 self.iniciarAfiliacionAsync(userData, websocketLink);
             } catch (Exception e) {
                 System.err.println("Error al intentar iniciar la tarea asíncrona: " + e.getMessage());
             }
         }
 
-        //Falta agregar que cree el jugador y lo asocie con un usuario
-
         return AuthResponseDTO.builder()
                 .token(jwtService.getToken(nuevoUsuario))
-                .playerData(dataDashResponse)
+                .playerData(userData)
                 .build();
     }
 
-    // CAMBIO: Recibe AffiliationDTO en lugar de DatosPersonales
     @Async
     public void iniciarAfiliacionAsync(AffiliationDTO datosAfiliacion, String websocketLink) {
         System.out.println("---- INICIANDO AFILIACIÓN EN HILO ASÍNCRONO ----");
@@ -124,7 +121,6 @@ public class UsuarioService {
                 return;
             }
 
-            // Buscar alias de provincia
             String query = "SELECT alias FROM provincias WHERE nombre = ?";
             String provinciaAlias;
             try {
@@ -134,9 +130,7 @@ public class UsuarioService {
                 return;
             }
 
-            // Construir payload
             Map<String, Object> requestBody = new HashMap<>();
-            // Aquí enviamos el objeto que tiene user, password, email, nombre, apellido...
             requestBody.put("playerData", datosAfiliacion);
             requestBody.put("websocketLink", websocketLink);
 

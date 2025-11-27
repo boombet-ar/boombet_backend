@@ -27,13 +27,7 @@ public class Usuario implements UserDetails {
         ADMIN
     }
 
-    public enum Status{
-        PENDING,
-        AFFILIATED
-    }
 
-
-    //Falta relacionar el usuario con un jugador.
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -49,8 +43,6 @@ public class Usuario implements UserDetails {
     @NotNull
     @Column(nullable=false, unique = true)
     private String dni;
-
-    private Status status;
 
     @NotNull
     @Column(nullable=false)
@@ -69,8 +61,10 @@ public class Usuario implements UserDetails {
     private String username;
 
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "id_jugador", referencedColumnName = "id")
+    private Jugador jugador;
 
-    //JWT
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority((role.name())));

@@ -30,10 +30,14 @@ public class JwtService {
     private String getToken(Map<String,Object> extraClaims, UserDetails userDetails) {
 
         Usuario user = (Usuario) userDetails;
+
+        Long jugadorId = (user.getJugador() != null) ? user.getJugador().getId() : null;
+
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(user.getEmail())
+                .claim("idJugador", jugadorId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000*60*60*24))
                 .signWith(getKey(), SignatureAlgorithm.HS256)
@@ -71,9 +75,8 @@ public class JwtService {
         // Hacemos cast porque UserDetails no tiene getEmail() nativo
         String userEmail = ((Usuario) userDetails).getEmail();
 
-        // 3. Comparamos EMAIL con EMAIL
         return (emailInToken.equals(userEmail)) && !isTokenExpired(token);
-    } //TESTEAR
+    }
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
