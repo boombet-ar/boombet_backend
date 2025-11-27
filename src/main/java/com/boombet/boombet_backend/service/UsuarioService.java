@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,7 +41,7 @@ public class UsuarioService {
     private final DatadashService datadashService;
     private final RestClient restClient;
     private final JugadorService jugadorService;
-
+    private final WebSocketService websocketService;
     public UsuarioService(
             JdbcTemplate jdbcTemplate,
             JwtService jwtService,
@@ -49,6 +50,7 @@ public class UsuarioService {
             AuthenticationManager authenticationManager,
             DatadashService datadashService,
             JugadorService jugadorService,
+            WebSocketService websocketService,
             @Qualifier("affiliatorRestClient") RestClient restClient
     ){
         this.jugadorService = jugadorService;
@@ -59,6 +61,7 @@ public class UsuarioService {
         this.authenticationManager = authenticationManager;
         this.datadashService = datadashService;
         this.restClient = restClient;
+        this.websocketService = websocketService;
     }
 
 
@@ -132,22 +135,39 @@ public class UsuarioService {
 
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("playerData", datosAfiliacion);
-            requestBody.put("websocketLink", websocketLink);
 
-            restClient.post()
+
+            Map<String, Object> respuestaApi = restClient.post()
                     .uri("/register/" + provinciaAlias)
                     .header("register_key", affiliatorToken)
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
                     .body(requestBody)
                     .retrieve()
-                    .toBodilessEntity();
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
 
+            System.out.println("---- RESPUESTA RECIBIDA, NOTIFICANDO WEBSOCKET ----");
+            WebsocketDTO notificacion = new WebsocketDTO();
+            notificacion.setWebsocketLink(websocketLink); // Para que el servicio extraiga el ID
+            notificacion.setPlayerData(new HashMap<>()); // O lo que quieras devolver
+            notificacion.setResponses(respuestaApi);
+            websocketService.sendToWebSocket(notificacion);
             System.out.println("---- AFILIACIÓN COMPLETADA EXITOSAMENTE (" + provinciaAlias + ") ----");
 
         } catch (Exception e) {
-            System.err.println("Error en afiliación asíncrona: " + e.getMessage());
+            System.err.println("Error en afiliación: " + e.getMessage());
+
+            enviarErrorPorSocket(websocketLink, e.getMessage());
         }
+    }
+
+    private void enviarErrorPorSocket(String link, String errorMsg) {
+        WebsocketDTO errorDto = new WebsocketDTO();
+        errorDto.setWebsocketLink(link);
+        Map<String, Object> errMap = new HashMap<>();
+        errMap.put("error", errorMsg);
+        errorDto.setResponses(errMap);
+        websocketService.sendToWebSocket(errorDto);
     }
 
     public AuthResponseDTO login(LoginRequestDTO request) {
