@@ -1,6 +1,7 @@
 package com.boombet.boombet_backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,10 @@ public class AffiliationDTO {
 
     private String nombre;
     private String apellido;
+
+    @Email
     private String email;
+
     private String telefono;
     private String genero;
 

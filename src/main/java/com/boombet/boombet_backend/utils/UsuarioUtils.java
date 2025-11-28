@@ -64,5 +64,51 @@ public class UsuarioUtils {
         return resultado;
     }
 
+    /**
+     * Valida la contraseña según las reglas estrictas de la imagen:
+     * - No secuencias de teclado (qwerty).
+     * - No números consecutivos (12, 23, 32).
+     * - No números repetidos (11, 22).
+     */
+    public static void validarFormatoPassword(String password) {
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía.");
+        }
+
+        String passLower = password.toLowerCase();
+
+        // 1. Validar secuencias de teclado comunes (como dice el error "qwerty")
+        // Puedes agregar más si es necesario (ej: "12345", "asdf")
+        String[] secuenciasProhibidas = {"qwerty", "asdf", "zxcv"};
+        for (String seq : secuenciasProhibidas) {
+            if (passLower.contains(seq)) {
+                throw new IllegalArgumentException("La contraseña no puede contener secuencias de teclado (" + seq + ").");
+            }
+        }
+
+        // 2. Validar secuencias numéricas (Consecutivos y Repetitivos)
+        // Recorremos la contraseña buscando pares de dígitos adyacentes
+        for (int i = 0; i < password.length() - 1; i++) {
+            char c1 = password.charAt(i);
+            char c2 = password.charAt(i + 1);
+
+            // Solo analizamos si AMBOS caracteres son dígitos
+            if (Character.isDigit(c1) && Character.isDigit(c2)) {
+                int n1 = Character.getNumericValue(c1);
+                int n2 = Character.getNumericValue(c2);
+
+                // Regla A: Repetitivos (ej: "22") -> (n1 == n2)
+                if (n1 == n2) {
+                    throw new IllegalArgumentException("La contraseña no puede contener números repetidos consecutivos (" + n1 + "" + n2 + ").");
+                }
+
+                // Regla B: Consecutivos Ascendentes (ej: "12") -> (n2 == n1 + 1)
+                // Regla C: Consecutivos Descendentes (ej: "21") -> (n2 == n1 - 1)
+                if (Math.abs(n1 - n2) == 1) {
+                    throw new IllegalArgumentException("La contraseña no puede contener números consecutivos (" + n1 + "" + n2 + ").");
+                }
+            }
+        }
+    }
 
 }

@@ -3,6 +3,7 @@ package com.boombet.boombet_backend.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +28,6 @@ public class Usuario implements UserDetails {
         ADMIN
     }
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -42,6 +42,7 @@ public class Usuario implements UserDetails {
 
     @NotNull
     @Column(nullable=false, unique = true)
+    @Size(min = 7, max= 8)
     private String dni;
 
     @NotNull

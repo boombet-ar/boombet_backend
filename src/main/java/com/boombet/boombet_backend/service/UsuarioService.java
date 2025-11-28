@@ -38,7 +38,7 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository usuarioRepository;
     private final AuthenticationManager authenticationManager;
-    private final DatadashService datadashService;
+
     private final RestClient restClient;
     private final JugadorService jugadorService;
     private final WebSocketService websocketService;
@@ -48,7 +48,6 @@ public class UsuarioService {
             PasswordEncoder passwordEncoder,
             UsuarioRepository usuarioRepository,
             AuthenticationManager authenticationManager,
-            DatadashService datadashService,
             JugadorService jugadorService,
             WebSocketService websocketService,
             @Qualifier("affiliatorRestClient") RestClient restClient
@@ -59,7 +58,6 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
         this.usuarioRepository = usuarioRepository;
         this.authenticationManager = authenticationManager;
-        this.datadashService = datadashService;
         this.restClient = restClient;
         this.websocketService = websocketService;
     }
@@ -76,7 +74,7 @@ public class UsuarioService {
          * */
         AffiliationDTO userData = inputWrapper.getConfirmedData();
         String websocketLink = inputWrapper.getWebsocketLink();
-
+        UsuarioUtils.validarFormatoPassword(userData.getPassword());
         if (usuarioRepository.existsByEmail(userData.getEmail())) {
             throw new IllegalArgumentException("Ya existe una cuenta con este correo");
         }
