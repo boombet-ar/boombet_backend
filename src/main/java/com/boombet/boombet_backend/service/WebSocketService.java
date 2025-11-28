@@ -12,12 +12,11 @@ public class WebSocketService {
     private final ServerWebSocketHandler serverHandler;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // Inyectamos el handler del servidor
     public WebSocketService(ServerWebSocketHandler serverHandler) {
         this.serverHandler = serverHandler;
     }
 
-    @Async
+
     public void sendToWebSocket(WebsocketDTO request) {
         try {
             // 1. Obtenemos el link que manda n8n: "wss://.../affiliation/1764265985718"

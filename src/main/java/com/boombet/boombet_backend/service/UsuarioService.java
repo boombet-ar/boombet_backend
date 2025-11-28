@@ -67,13 +67,13 @@ public class UsuarioService {
 
     public AuthResponseDTO register(RegistroRequestDTO inputWrapper) {
         /*
-        * Hashea la contraseña
-        * Hace la solicitud a datadash y recibe datos del usuario
-        * Crea un jugador y lo vincula con el usuario
-        * Hace la solicitud a la api de afiliaciones para empezar la afiliación
-        * Devuelve los datos del jugador y el link del websocket(que viene del front)
-        * Con ese link de websocket se notificará al front el estado de las afiliaciones.
-        * */
+         * Hashea la contraseña
+         * Hace la solicitud a datadash y recibe datos del usuario
+         * Crea un jugador y lo vincula con el usuario
+         * Hace la solicitud a la api de afiliaciones para empezar la afiliación
+         * Devuelve los datos del jugador y el link del websocket(que viene del front)
+         * Con ese link de websocket se notificará al front el estado de las afiliaciones.
+         * */
         AffiliationDTO userData = inputWrapper.getConfirmedData();
         String websocketLink = inputWrapper.getWebsocketLink();
 
@@ -133,19 +133,19 @@ public class UsuarioService {
                 return;
             }
 
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("playerData", datosAfiliacion);
 
+
+            System.out.println(websocketLink);
 
             Map<String, Object> respuestaApi = restClient.post()
                     .uri("/register/" + provinciaAlias)
                     .header("register_key", affiliatorToken)
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
-                    .body(requestBody)
+                    // CAMBIO AQUI: Enviamos 'datosAfiliacion' directamente en lugar de 'requestBody'
+                    .body(datosAfiliacion)
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
-
             System.out.println("---- RESPUESTA RECIBIDA, NOTIFICANDO WEBSOCKET ----");
             WebsocketDTO notificacion = new WebsocketDTO();
             notificacion.setWebsocketLink(websocketLink); // Para que el servicio extraiga el ID
