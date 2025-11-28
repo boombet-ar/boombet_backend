@@ -19,7 +19,6 @@ public class WebSocketService {
 
     public void sendToWebSocket(WebsocketDTO request) {
         try {
-            // 1. Obtenemos el link que manda n8n: "wss://.../affiliation/1764265985718"
             String link = request.getWebsocketLink();
 
             if (link == null || link.isEmpty()) return;

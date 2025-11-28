@@ -142,18 +142,34 @@ public class UsuarioService {
                     .header("register_key", affiliatorToken)
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
-                    // CAMBIO AQUI: Enviamos 'datosAfiliacion' directamente en lugar de 'requestBody'
                     .body(datosAfiliacion)
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
             System.out.println("---- RESPUESTA RECIBIDA, NOTIFICANDO WEBSOCKET ----");
             WebsocketDTO notificacion = new WebsocketDTO();
             notificacion.setWebsocketLink(websocketLink); // Para que el servicio extraiga el ID
-            notificacion.setPlayerData(new HashMap<>()); // O lo que quieras devolver
-            notificacion.setResponses(respuestaApi);
+
+            if (respuestaApi != null) {
+                // 1. Extraer playerData si existe en la respuesta externa
+                if (respuestaApi.containsKey("playerData") && respuestaApi.get("playerData") instanceof Map) {
+                    notificacion.setPlayerData((Map<String, Object>) respuestaApi.get("playerData"));
+                } else {
+                    // Fallback: si no viene, podríamos mandar vacío o los datos originales
+                    notificacion.setPlayerData(new HashMap<>());
+                }
+
+                // 2. Extraer responses (los resultados de los casinos) si existe
+                if (respuestaApi.containsKey("responses") && respuestaApi.get("responses") instanceof Map) {
+                    notificacion.setResponses((Map<String, Object>) respuestaApi.get("responses"));
+                } else {
+                    // Si la estructura externa no tiene 'responses', quizás queramos mandar todo el mapa
+                    // o dejarlo vacío según tu lógica. Aquí asumimos que queremos extraerlo limpio.
+                    notificacion.setResponses(new HashMap<>());
+                }
+            }
+
             websocketService.sendToWebSocket(notificacion);
             System.out.println("---- AFILIACIÓN COMPLETADA EXITOSAMENTE (" + provinciaAlias + ") ----");
-
         } catch (Exception e) {
             System.err.println("Error en afiliación: " + e.getMessage());
 
