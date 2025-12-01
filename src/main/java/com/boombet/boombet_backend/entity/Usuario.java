@@ -28,6 +28,11 @@ public class Usuario implements UserDetails {
         ADMIN
     }
 
+    public enum Genero{
+        Masculino,
+        Femenino
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -45,9 +50,10 @@ public class Usuario implements UserDetails {
     @Size(min = 7, max= 8)
     private String dni;
 
+    @Enumerated(EnumType.STRING)
     @NotNull
     @Column(nullable=false)
-    private String genero;
+    Genero genero;
 
     @NotNull
     @Column(nullable=false)
