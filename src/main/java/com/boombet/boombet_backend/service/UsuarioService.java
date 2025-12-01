@@ -90,7 +90,8 @@ public class UsuarioService {
         nuevoUsuario.setRole(Usuario.Role.USER);
         nuevoUsuario.setDni(userData.getDni());
         nuevoUsuario.setEmail(userData.getEmail());
-        nuevoUsuario.setGenero(userData.getGenero());
+        Usuario.Genero generoEnum = Usuario.Genero.fromString(userData.getGenero());
+        nuevoUsuario.setGenero(generoEnum);
         nuevoUsuario.setTelefono(userData.getTelefono());
         nuevoUsuario.setJugador(jugador);
         usuarioRepository.save(nuevoUsuario);

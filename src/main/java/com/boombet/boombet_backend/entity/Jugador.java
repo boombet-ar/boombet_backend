@@ -1,6 +1,7 @@
 package com.boombet.boombet_backend.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,11 +32,12 @@ public class Jugador {
 
     private String telefono;
 
-    private String genero;
-
+    @Enumerated(EnumType.STRING)
+    Usuario.Genero genero;
 
     private LocalDate fecha_nacimiento;
 
+    @Size(min = 7, max= 8)
     private String dni;
 
     private String cuit;

@@ -1,5 +1,6 @@
 package com.boombet.boombet_backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -24,6 +25,7 @@ public class AffiliationDTO {
     private String telefono;
     private String genero;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
     @JsonProperty("fecha_nacimiento")
     private LocalDate fechaNacimiento;
 

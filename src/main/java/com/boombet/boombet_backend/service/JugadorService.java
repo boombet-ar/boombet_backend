@@ -26,7 +26,7 @@ public class JugadorService {
                 .apellido(userData.getApellido())
                 .email(userData.getEmail())
                 .telefono(userData.getTelefono())
-                .genero(userData.getGenero())
+                .genero(Usuario.Genero.valueOf(userData.getGenero()))
                 .fecha_nacimiento(userData.getFechaNacimiento())
                 .dni(userData.getDni())
                 .cuit(userData.getCuit())
@@ -44,7 +44,10 @@ public class JugadorService {
     @PreAuthorize("authentication.principal.jugador?.id == #id")
     public JugadorDTO getJugador(Long id) {
         Jugador jugador = jugadorRepository.findById(id).orElse(null);
+        Usuario usuario = usuarioRepository.findByJugador_Id(id).orElse((null));
         JugadorDTO jugadorDto = mapToDto(jugador);
+        jugadorDto.setUsername(usuario.getUsername());
+        jugadorDto.setIdJugador(jugador.getId());
         return jugadorDto;
     }
 
@@ -63,7 +66,7 @@ public class JugadorService {
         if (dto.getApellido() != null) { jugador.setApellido(dto.getApellido()); }
         if (dto.getEmail() != null) { jugador.setEmail(dto.getEmail()); }
         if (dto.getTelefono() != null) { jugador.setTelefono(dto.getTelefono()); }
-        if (dto.getGenero() != null) { jugador.setGenero(dto.getGenero()); }
+        if (dto.getGenero() != null) { jugador.setGenero(Usuario.Genero.valueOf(dto.getGenero())); }
         if (dto.getCuit() != null) { jugador.setCuit(dto.getCuit()); }
         if (dto.getEstCivil() != null) { jugador.setEst_civil(dto.getEstCivil()); }
         if (dto.getFechaNacimiento() != null) { jugador.setFecha_nacimiento(dto.getFechaNacimiento());}
@@ -88,7 +91,7 @@ public class JugadorService {
                 .apellido(j.getApellido())
                 .email(j.getEmail())
                 .telefono(j.getTelefono())
-                .genero(j.getGenero())
+                .genero(j.getGenero() != null ? j.getGenero().name() : null)
                 .fechaNacimiento(j.getFecha_nacimiento())
                 .dni(j.getDni())
                 .cuit(j.getCuit())

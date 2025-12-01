@@ -28,10 +28,20 @@ public class Usuario implements UserDetails {
         ADMIN
     }
 
-    public enum Genero{
+    public enum Genero {
         Masculino,
-        Femenino
-    }
+        Femenino;
+
+
+        public static Genero fromString(String text) {
+            for (Genero g : Genero.values()) {
+                if (g.name().equalsIgnoreCase(text)) {
+                    return g;
+                }
+            }
+            throw new IllegalArgumentException("Género no soportado: " + text);
+        }
+        }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
