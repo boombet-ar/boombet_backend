@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -23,7 +25,7 @@ public class AffiliationDTO {
     private String genero;
 
     @JsonProperty("fecha_nacimiento")
-    private String fechaNacimiento;
+    private LocalDate fechaNacimiento;
 
     private String dni;
     private String cuit;

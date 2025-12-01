@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name="jugadores")
 @Data
@@ -31,7 +33,8 @@ public class Jugador {
 
     private String genero;
 
-    private String fecha_nacimiento;
+
+    private LocalDate fecha_nacimiento;
 
     private String dni;
 
