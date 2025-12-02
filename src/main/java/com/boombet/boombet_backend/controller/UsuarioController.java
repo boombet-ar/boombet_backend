@@ -25,9 +25,10 @@ public class UsuarioController {
     }
 
     @PostMapping("/auth/register")
-    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegistroRequestDTO credsUsuario) {
+    public ResponseEntity<Void> register(@Valid @RequestBody RegistroRequestDTO credsUsuario) {
         try {
-            return ResponseEntity.ok(usuarioService.register(credsUsuario));
+            usuarioService.register(credsUsuario);
+            return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
@@ -64,7 +65,7 @@ public class UsuarioController {
     }
 
 
-    @GetMapping("/auth/verify")
+    @GetMapping("/auth/verify") //Verifica
     public ResponseEntity<String> verifyAccount(@RequestParam String token) {
         try {
             usuarioService.verificarUsuario(token);
@@ -99,4 +100,16 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
         }
     }
+
+
+    @PostMapping("/auth/affiliate") //Cuando el usuario le pega a /verify, debe pegarle tambien a este endpoint.
+    public ResponseEntity<String> affiliate(@RequestBody RegistroRequestDTO input) {
+        try {
+            usuarioService.iniciarAfiliacionAsync(input.getConfirmedData(), input.getWebsocketLink());
+            return ResponseEntity.ok("Afiliación iniciada.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
+    }
+
 }

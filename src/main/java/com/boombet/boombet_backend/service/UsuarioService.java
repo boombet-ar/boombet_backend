@@ -6,6 +6,7 @@ import com.boombet.boombet_backend.entity.Jugador;
 import com.boombet.boombet_backend.entity.Usuario;
 import com.boombet.boombet_backend.utils.UsuarioUtils;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,17 +67,19 @@ public class UsuarioService {
     }
 
 
-    public AuthResponseDTO register(RegistroRequestDTO inputWrapper) {
+
+
+    @Transactional
+    public void register(RegistroRequestDTO inputWrapper) {
         /*
          * Hashea la contraseña
          * Hace la solicitud a datadash y recibe datos del usuario
          * Crea un jugador y lo vincula con el usuario
-         * Hace la solicitud a la api de afiliaciones para empezar la afiliación
-         * Devuelve los datos del jugador y el link del websocket(que viene del front)
-         * Con ese link de websocket se notificará al front el estado de las afiliaciones.
          * */
+
         AffiliationDTO userData = inputWrapper.getConfirmedData();
-        String websocketLink = inputWrapper.getWebsocketLink();
+
+
         UsuarioUtils.validarFormatoPassword(userData.getPassword());
         if (usuarioRepository.existsByEmail(userData.getEmail())) {
             throw new IllegalArgumentException("Ya existe una cuenta con este correo");
@@ -115,19 +118,8 @@ public class UsuarioService {
                 htmlBody
         );
 
-        if (websocketLink != null && !websocketLink.isEmpty()) {
-            try {
-                self.iniciarAfiliacionAsync(userData, websocketLink);
-            } catch (Exception e) {
-                System.err.println("Error al intentar iniciar la tarea asíncrona: " + e.getMessage());
-            }
-        }
+        //Solo devuelve un 200 si funcionó.
 
-
-        return AuthResponseDTO.builder()
-                .token(jwtService.getToken(nuevoUsuario))
-                .playerData(userData)
-                .build();
     }
 
     @Async
@@ -204,6 +196,7 @@ public class UsuarioService {
     }
 
     public AuthResponseDTO login(LoginRequestDTO request) {
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getIdentifier(),
@@ -213,6 +206,10 @@ public class UsuarioService {
 
         Usuario usuario = usuarioRepository.findByUsernameOrEmail(request.getIdentifier(), request.getIdentifier())
                 .orElseThrow();
+
+        if (!usuario.isVerified()){
+            throw new RuntimeException("Usuario no verificado");
+        }
 
         String token = jwtService.getToken(usuario);
 
