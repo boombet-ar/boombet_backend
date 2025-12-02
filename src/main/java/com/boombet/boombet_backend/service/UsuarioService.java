@@ -82,6 +82,8 @@ public class UsuarioService {
         Jugador jugador = jugadorService.crearJugador(userData);
 
 
+
+
         String hashedPass = passwordEncoder.encode(userData.getPassword());
         Usuario nuevoUsuario = new Usuario();
 
@@ -94,6 +96,15 @@ public class UsuarioService {
         nuevoUsuario.setGenero(generoEnum);
         nuevoUsuario.setTelefono(userData.getTelefono());
         nuevoUsuario.setJugador(jugador);
+
+        String verificationToken = "123123"; //hardcodeado
+        if(nuevoUsuario.isVerified()){
+            throw new IllegalArgumentException("Ya está verificado");
+        }else {
+            nuevoUsuario.setVerificationToken(verificationToken);
+            nuevoUsuario.setVerified(true);
+        }
+
         usuarioRepository.save(nuevoUsuario);
 
         if (websocketLink != null && !websocketLink.isEmpty()) {
@@ -202,4 +213,6 @@ public class UsuarioService {
                 .token(token)
                 .build();
     }
+
+
 }

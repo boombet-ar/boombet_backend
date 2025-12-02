@@ -41,7 +41,16 @@ public class Usuario implements UserDetails {
             }
             throw new IllegalArgumentException("Género no soportado: " + text);
         }
-        }
+    }
+
+    @Column(name = "verification_token")
+    private String verificationToken;
+
+    @Column(name = "is_verified")
+    private boolean isVerified;
+
+    @Column(name = "reset_token")
+    private String resetToken;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
