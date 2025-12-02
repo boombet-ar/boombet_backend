@@ -84,9 +84,6 @@ public class UsuarioService {
 
         Jugador jugador = jugadorService.crearJugador(userData);
 
-
-
-
         String hashedPass = passwordEncoder.encode(userData.getPassword());
         Usuario nuevoUsuario = new Usuario();
 
@@ -110,10 +107,12 @@ public class UsuarioService {
         //url hardcodeada, arreglar. la url debe ser la del frontend. en esa ruta, el frontend debe pegarle a
         // /api/users/auth/verify
 
+        String htmlBody = UsuarioUtils.construirEmailBienvenida(userData.getNombre(), verificacionLink);
+
         emailService.enviarCorreo(
                 nuevoUsuario.getEmail(),
                 "Verifica tu cuenta en Boombet",
-                "¡Hola! Gracias por registrarte. Por favor confirma tu cuenta haciendo clic aquí: " + verificacionLink
+                htmlBody
         );
 
         if (websocketLink != null && !websocketLink.isEmpty()) {
@@ -236,5 +235,6 @@ public class UsuarioService {
             throw new IllegalArgumentException("El link de verificación ha expirado o es inválido");
         }
     }
+
 
 }

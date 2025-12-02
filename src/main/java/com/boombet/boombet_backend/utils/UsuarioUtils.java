@@ -111,4 +111,106 @@ public class UsuarioUtils {
         }
     }
 
+    public static String construirEmailBienvenida(String nombre, String link) {
+        // Colores extraídos de las referencias:
+        String verdeNeon = "#4CE68B"; // El verde vibrante de los botones
+        String darkBgMain = "#09120f"; // Fondo principal muy oscuro
+        String darkBgCard = "#11211c"; // Fondo de la tarjeta (un poco menos oscuro)
+        String textColorPrimary = "#ffffff"; // Texto blanco
+        String textColorSecondary = "#b7c4bd"; // Texto gris claro con tinte verde
+
+        return """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Bienvenido a BoomBet</title>
+                    <style>
+                        /* Estilos para clientes que soporten hover (ej. Gmail web) */
+                        .btn-neon:hover {
+                            background-color: #3ed67e !important;
+                            box-shadow: 0 0 15px rgba(76, 230, 139, 0.6) !important;
+                            transform: translateY(-2px);
+                        }
+                    </style>
+                </head>
+                <body style="margin: 0; padding: 0; background-color: %s; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                
+                    <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="background-color: %s; padding: 40px 0;">
+                        <tr>
+                            <td align="center">
+                
+                                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: %s; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 600px; width: 90%%; margin: 0 auto; border: 1px solid #1f3a30;">
+                
+                                    <tr>
+                                        <td style="padding: 35px 0; text-align: center; background: linear-gradient(180deg, #162b24 0%%, %s 100%%);">
+                                            <h1 style="margin: 0; color: %s; font-size: 36px; font-weight: 900; letter-spacing: 1px; font-style: italic;">
+                                                BOOM<span style="color: %s;">BET</span>
+                                            </h1>
+                                        </td>
+                                    </tr>
+                
+                                    <tr>
+                                        <td style="background-color: %s; height: 2px; font-size: 0; line-height: 0;">&nbsp;</td>
+                                    </tr>
+                
+                                    <tr>
+                                        <td style="padding: 40px 40px 30px 40px; text-align: center;">
+                
+                                            <h2 style="color: %s; font-size: 28px; margin: 0 0 20px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                ¡YA PODÉS FORMAR PARTE DEL CLUB! 🔥
+                                            </h2>
+                
+                                            <p style="color: %s; font-size: 16px; line-height: 1.6; margin-bottom: 35px;">
+                                                Hola <strong>%s</strong>,<br><br>
+                                                Estás a un solo paso de empezar a vivir la experiencia BoomBet desde adentro. Activá tu cuenta ahora y accedé a los mejores beneficios.
+                                            </p>
+                
+                                            <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
+                                                <tr>
+                                                    <td align="center">
+                                                        <a href="%s" target="_blank" class="btn-neon" style="display: inline-block; padding: 14px 40px; background-color: %s; color: #09120f; font-size: 16px; font-weight: 800; text-decoration: none; border-radius: 50px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(76, 230, 139, 0.3); transition: all 0.3s ease;">
+                                                            VERIFICAR MI CUENTA
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                
+                                            <p style="color: %s; font-size: 13px; margin-top: 40px; margin-bottom: 10px;">
+                                                Si el botón no funciona, copiá y pegá este enlace:
+                                            </p>
+                                            <p style="margin: 0; word-break: break-all; background-color: #0a1612; padding: 10px; border-radius: 5px; border: 1px solid #1f3a30;">
+                                                <a href="%s" style="color: %s; text-decoration: none; font-size: 12px;">
+                                                    %s
+                                                </a>
+                                            </p>
+                                        </td>
+                                    </tr>
+                
+                                    <tr>
+                                        <td style="background-color: #0a1612; padding: 25px; text-align: center; border-top: 1px solid #1f3a30;">
+                                            <p style="color: #5c7a6f; font-size: 11px; margin: 0; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">
+                                                © 2025 BOOMBET ARGENTINA
+                                            </p>
+                                            <p style="color: #4a635a; font-size: 11px; margin: 10px 0 0 0;">
+                                                Jugar compulsivamente es perjudicial para la salud. +18.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+                """.formatted(
+                darkBgMain, darkBgMain, darkBgCard, darkBgCard, textColorPrimary, verdeNeon, // Colores del head/body/card/logo
+                verdeNeon, // Color del separador
+                textColorPrimary, textColorSecondary, nombre, // Título y texto cuerpo
+                link, verdeNeon, // Link del botón y color del botón
+                textColorSecondary, link, verdeNeon, link // Link alternativo y sus colores
+        );
+    }
 }
