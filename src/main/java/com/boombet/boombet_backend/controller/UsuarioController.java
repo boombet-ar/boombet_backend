@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/users")
 public class UsuarioController {
@@ -72,4 +74,29 @@ public class UsuarioController {
         }
     }
 
+
+    public record ForgotPasswordDto(String email) {} //pasar a usuarioutils.dto
+    public record ResetPasswordDto(String token, String newPassword){} //pasar a usuarioutils.dto
+
+    @PostMapping("/auth/forgot-password")
+    //Solicita cambio de contraseña
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordDto request) {
+        try {
+            usuarioService.solicitarCambioDeContraseña(request.email());
+            return ResponseEntity.ok("Si el correo existe, recibirás un enlace de recuperación.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+
+    @PostMapping("/auth/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordDto input) {
+        try {
+            usuarioService.restablecerContrasena(input.token(), input.newPassword());
+            return ResponseEntity.ok("Contraseña actualizada con éxito.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
+    }
 }

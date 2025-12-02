@@ -236,5 +236,45 @@ public class UsuarioService {
         }
     }
 
+    public void solicitarCambioDeContraseña(String email){
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("No existe un usuario registrado con este email."));
 
+        String token = jwtService.getToken(usuario);
+
+        usuario.setResetToken(token);
+        usuarioRepository.save(usuario);
+
+        String frontendUrl = "http://localhost:7070/api/users/auth"; //Cambiar
+
+        String resetLink = frontendUrl + "/recuperar-password?token=" + token;
+
+        String nombre = (usuario.getJugador() != null) ? usuario.getJugador().getNombre() : usuario.getUsername();
+
+        String htmlBody = UsuarioUtils.construirEmailRecuperacion(nombre, resetLink);
+        emailService.enviarCorreo(usuario.getEmail(), "Recuperá tu acceso a Boombet 🔐", htmlBody);
+
+    }
+
+
+    public void restablecerContrasena(String token, String newPassword) {
+        String email = jwtService.extractUsername(token);
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        if (usuario.getResetToken() == null || !usuario.getResetToken().equals(token)) {
+            throw new IllegalArgumentException("El token es inválido o ya fue utilizado.");
+        }
+
+        if (!jwtService.isTokenValid(token, usuario)) {
+            throw new IllegalArgumentException("El enlace ha expirado. Solicitá uno nuevo.");
+        }
+
+        UsuarioUtils.validarFormatoPassword(newPassword);
+
+        usuario.setPassword(passwordEncoder.encode(newPassword));
+        usuario.setResetToken(null);
+        usuarioRepository.save(usuario);
+    }
 }
