@@ -32,6 +32,7 @@ public class JwtService {
         Usuario user = (Usuario) userDetails;
 
         Long jugadorId = (user.getJugador() != null) ? user.getJugador().getId() : null;
+        String email = user.getEmail();
 
         return Jwts
                 .builder()

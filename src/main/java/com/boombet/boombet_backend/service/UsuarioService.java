@@ -97,13 +97,9 @@ public class UsuarioService {
         nuevoUsuario.setTelefono(userData.getTelefono());
         nuevoUsuario.setJugador(jugador);
 
-        String verificationToken = "123123"; //hardcodeado
-        if(nuevoUsuario.isVerified()){
-            throw new IllegalArgumentException("Ya está verificado");
-        }else {
-            nuevoUsuario.setVerificationToken(verificationToken);
-            nuevoUsuario.setVerified(true);
-        }
+        String verificationToken = jwtService.getToken(nuevoUsuario);
+        nuevoUsuario.setVerificationToken(verificationToken);
+        nuevoUsuario.setVerified(false);
 
         usuarioRepository.save(nuevoUsuario);
 
@@ -214,5 +210,19 @@ public class UsuarioService {
                 .build();
     }
 
+    public void verificarUsuario(String token) {
+        String email = jwtService.extractUsername(token); //username en realidad es el mail
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        if (jwtService.isTokenValid(token, usuario)) {
+            usuario.setVerified(true);
+            usuario.setVerificationToken(null);
+            usuarioRepository.save(usuario);
+        } else {
+            throw new IllegalArgumentException("El link de verificación ha expirado o es inválido");
+        }
+    }
 
 }

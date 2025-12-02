@@ -62,6 +62,14 @@ public class UsuarioController {
     }
 
 
-
+    @GetMapping("/auth/verify")
+    public ResponseEntity<String> verifyAccount(@RequestParam String token) {
+        try {
+            usuarioService.verificarUsuario(token);
+            return ResponseEntity.ok("¡Cuenta verificada con éxito! Ya puedes iniciar sesión.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        }
+    }
 
 }
