@@ -27,6 +27,9 @@ import java.util.Map;
 @Service
 public class UsuarioService {
 
+    @Value("${front.verifyurl}")
+    String frontVerifyUrl;
+
     @Value("${affiliator.api.key}")
     private String affiliatorToken;
 
@@ -106,7 +109,8 @@ public class UsuarioService {
 
         usuarioRepository.save(nuevoUsuario);
 
-        String verificacionLink = "http://localhost:7070/api/users/auth/verify?token=" + verificationToken;
+
+        String verificacionLink = frontVerifyUrl + verificationToken;
         //url hardcodeada, arreglar. la url debe ser la del frontend. en esa ruta, el frontend debe pegarle a
         // /api/users/auth/verify
 
@@ -141,6 +145,7 @@ public class UsuarioService {
                 provinciaAlias = jdbcTemplate.queryForObject(query, String.class, nombreProvincia);
             } catch (Exception e) {
                 System.err.println("Provincia no encontrada en DB de alias: " + nombreProvincia);
+                enviarErrorPorSocket(websocketLink, "Error: La provincia '" + nombreProvincia + "' no es válida o no existe.");
                 return;
             }
 
