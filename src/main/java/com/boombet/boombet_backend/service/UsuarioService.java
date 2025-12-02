@@ -33,6 +33,7 @@ public class UsuarioService {
     @Lazy
     private UsuarioService self;
 
+    private final EmailService emailService;
     private final JdbcTemplate jdbcTemplate;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
@@ -50,7 +51,8 @@ public class UsuarioService {
             AuthenticationManager authenticationManager,
             JugadorService jugadorService,
             WebSocketService websocketService,
-            @Qualifier("affiliatorRestClient") RestClient restClient
+            @Qualifier("affiliatorRestClient") RestClient restClient,
+            EmailService emailService
     ){
         this.jugadorService = jugadorService;
         this.jdbcTemplate = jdbcTemplate;
@@ -60,6 +62,7 @@ public class UsuarioService {
         this.authenticationManager = authenticationManager;
         this.restClient = restClient;
         this.websocketService = websocketService;
+        this.emailService = emailService;
     }
 
 
@@ -103,6 +106,16 @@ public class UsuarioService {
 
         usuarioRepository.save(nuevoUsuario);
 
+        String verificacionLink = "http://localhost:7070/api/users/auth/verify?token=" + verificationToken;
+        //url hardcodeada, arreglar. la url debe ser la del frontend. en esa ruta, el frontend debe pegarle a
+        // /api/users/auth/verify
+
+        emailService.enviarCorreo(
+                nuevoUsuario.getEmail(),
+                "Verifica tu cuenta en Boombet",
+                "¡Hola! Gracias por registrarte. Por favor confirma tu cuenta haciendo clic aquí: " + verificacionLink
+        );
+
         if (websocketLink != null && !websocketLink.isEmpty()) {
             try {
                 self.iniciarAfiliacionAsync(userData, websocketLink);
@@ -110,6 +123,7 @@ public class UsuarioService {
                 System.err.println("Error al intentar iniciar la tarea asíncrona: " + e.getMessage());
             }
         }
+
 
         return AuthResponseDTO.builder()
                 .token(jwtService.getToken(nuevoUsuario))
@@ -168,8 +182,6 @@ public class UsuarioService {
                 if (respuestaApi.containsKey("responses") && respuestaApi.get("responses") instanceof Map) {
                     notificacion.setResponses((Map<String, Object>) respuestaApi.get("responses"));
                 } else {
-                    // Si la estructura externa no tiene 'responses', quizás queramos mandar todo el mapa
-                    // o dejarlo vacío según tu lógica. Aquí asumimos que queremos extraerlo limpio.
                     notificacion.setResponses(new HashMap<>());
                 }
             }
