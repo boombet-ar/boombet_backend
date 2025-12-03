@@ -155,7 +155,6 @@ public class UsuarioService {
 
             Map<String, Object> respuestaApi = restClient.post()
                     .uri("/register/" + provinciaAlias)
-                    .header("register_key", affiliatorToken)
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
                     .body(datosAfiliacion)
