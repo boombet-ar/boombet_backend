@@ -237,14 +237,14 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("No existe un usuario registrado con este email."));
 
-        String token = jwtService.getToken(usuario);
+        String verificationToken = UUID.randomUUID().toString();
 
-        usuario.setResetToken(token);
+        usuario.setResetToken(verificationToken);
         usuarioRepository.save(usuario);
 
         String frontendUrl = "http://localhost:7070/api/users/auth"; //Cambiar
 
-        String resetLink = frontendUrl + "/recuperar-password?token=" + token;
+        String resetLink = frontendUrl + "/recuperar-password?token=" + verificationToken;
 
         String nombre = (usuario.getJugador() != null) ? usuario.getJugador().getNombre() : usuario.getUsername();
 
@@ -253,25 +253,16 @@ public class UsuarioService {
 
     }
 
-
     public void restablecerContrasena(String token, String newPassword) {
-        String email = jwtService.extractUsername(token);
-
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
-        if (usuario.getResetToken() == null || !usuario.getResetToken().equals(token)) {
-            throw new IllegalArgumentException("El token es inválido o ya fue utilizado.");
-        }
-
-        if (!jwtService.isTokenValid(token, usuario)) {
-            throw new IllegalArgumentException("El enlace ha expirado. Solicitá uno nuevo.");
-        }
+        Usuario usuario = usuarioRepository.findByResetToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("El enlace de recuperación es inválido o ya fue utilizado."));
 
         UsuarioUtils.validarFormatoPassword(newPassword);
 
         usuario.setPassword(passwordEncoder.encode(newPassword));
+
         usuario.setResetToken(null);
+
         usuarioRepository.save(usuario);
     }
 }
