@@ -31,6 +31,9 @@ public class UsuarioService {
     @Value("${front.verifyurl}")
     String frontVerifyUrl;
 
+    @Value("${front.passwordurl}")
+    String frontPasswordUrl;
+
     @Value("${affiliator.api.key}")
     private String affiliatorToken;
 
@@ -242,9 +245,7 @@ public class UsuarioService {
         usuario.setResetToken(verificationToken);
         usuarioRepository.save(usuario);
 
-        String frontendUrl = "http://localhost:7070/api/users/auth"; //Cambiar
-
-        String resetLink = frontendUrl + "/recuperar-password?token=" + verificationToken;
+        String resetLink = frontPasswordUrl + verificationToken;
 
         String nombre = (usuario.getJugador() != null) ? usuario.getJugador().getNombre() : usuario.getUsername();
 
