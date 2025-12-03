@@ -39,5 +39,18 @@ public class BondaCouponController {
         return ResponseEntity.ok(respuesta);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getCuponById(
+            @AuthenticationPrincipal Usuario usuario,
+            @PathVariable("id") String id
+    ) {
+        if (usuario == null || usuario.getId() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Map<String, Object> respuesta = bondaCouponService.obtenerCuponPorId(usuario.getId(), id);
+
+        return ResponseEntity.ok(respuesta);
+    }
 
 }

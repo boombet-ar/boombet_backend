@@ -36,6 +36,7 @@ public class BondaCouponService {
     public Map<String, Object> obtenerCupones(Long idUsuario, Integer page, String orderBy) {
         int pageNum = (page != null && page > 0) ? page : 1;
         String sortOrder = (orderBy != null && !orderBy.isEmpty()) ? orderBy : "relevant";
+
         //String codigoAfiliado = String.valueOf(idUsuario);
 
         String codigoAfiliado = "123456"; //Por ahora usamos este para testear
@@ -62,5 +63,33 @@ public class BondaCouponService {
         }
     }
 
+    /**
+     * Obtiene el detalle de un cupón específico por su ID.
+     *
+     * @param idUsuario ID del usuario (usado como codigo_afiliado).
+     * @param idCupon   ID del cupón a buscar.
+     * @return Map con la respuesta JSON de la API.
+     */
+    public Map<String, Object> obtenerCuponPorId(Long idUsuario, String idCupon) {
 
+        // String codigoAfiliado = String.valueOf(idUsuario);
+        String codigoAfiliado = "123456";
+
+        try {
+            return restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/cupones/{id}")
+                            .queryParam("key", apiKey)
+                            .queryParam("micrositio_id", micrositeId)
+                            .queryParam("codigo_afiliado", codigoAfiliado)
+                            .queryParam("subcategories", true)
+                            .build(idCupon))
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+
+        } catch (Exception e) {
+            System.err.println(">>> ❌ Error obteniendo cupón " + idCupon + " de Bonda: " + e.getMessage());
+            throw new RuntimeException("Error al obtener el cupón: " + e.getMessage());
+        }
+    }
 }
