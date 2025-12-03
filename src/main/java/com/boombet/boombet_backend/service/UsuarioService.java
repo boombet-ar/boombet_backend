@@ -23,6 +23,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class UsuarioService {
@@ -103,7 +104,7 @@ public class UsuarioService {
         nuevoUsuario.setTelefono(userData.getTelefono());
         nuevoUsuario.setJugador(jugador);
 
-        String verificationToken = jwtService.getToken(nuevoUsuario);
+        String verificationToken = UUID.randomUUID().toString();
         nuevoUsuario.setVerificationToken(verificationToken);
         nuevoUsuario.setVerified(false);
 
@@ -223,18 +224,13 @@ public class UsuarioService {
     }
 
     public void verificarUsuario(String token) {
-        String email = jwtService.extractUsername(token); //username en realidad es el mail
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        Usuario usuario = usuarioRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("El link de verificación es inválido o ya fue utilizado."));
 
-        if (jwtService.isTokenValid(token, usuario)) {
-            usuario.setVerified(true);
-            usuario.setVerificationToken(null);
-            usuarioRepository.save(usuario);
-        } else {
-            throw new IllegalArgumentException("El link de verificación ha expirado o es inválido");
-        }
+        usuario.setVerified(true);
+        usuario.setVerificationToken(null);
+        usuarioRepository.save(usuario);
     }
 
     public void solicitarCambioDeContraseña(String email){

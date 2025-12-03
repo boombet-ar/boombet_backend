@@ -20,7 +20,7 @@ public class RestClientsConfig {
     @Bean("affiliatorRestClient")
     public RestClient affiliatorRestClient(
             @Value("${affiliator.api.base-url}") String baseUrl,
-            @Value("$affiliator.api.key")String apiKey) {
+            @Value("${affiliator.api.key}")String apiKey) {
 
         RestClient clientBase = buildClient(baseUrl, Duration.ofMinutes(5));
         return clientBase.mutate()
