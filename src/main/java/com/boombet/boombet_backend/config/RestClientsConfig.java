@@ -28,18 +28,25 @@ public class RestClientsConfig {
                 .build();
     }
 
-    @Bean("bondaRestClient")
-    public RestClient bondaRestClient(
+    @Bean("bondaAffiliatesClient")
+    public RestClient bondaAffiliatesClient(
             @Value("${bonda.api.base-url}") String baseUrl,
-            @Value("${bonda.api.key}") String token,
-            @Value("${bonda.microsite.id}") String siteId) {
+            @Value("${bonda.api.key}") String token) {
 
-        RestClient clientBase = buildClient(baseUrl, Duration.ofSeconds(30));
-
-        return clientBase.mutate()
-                .defaultHeader("microsite_id", siteId)
-                .defaultHeader("Authorization", "Bearer " + token)
+        return buildClient(baseUrl, Duration.ofSeconds(30)).mutate()
+                // IMPORTANTE: Solo enviamos el header 'token'.
+                // No enviamos 'microsite_id' aquí porque va en la URL.
+                .defaultHeader("token", token)
                 .build();
+    }
+
+    @Bean("bondaCouponsClient")
+    public RestClient bondaCouponsClient(
+            @Value("${bonda.api.base-url}") String baseUrl) {
+
+        // Este cliente va "limpio" de headers de seguridad porque
+        // se los pasaremos manualemente en la URL (Query Params)
+        return buildClient(baseUrl, Duration.ofSeconds(30));
     }
 
     private RestClient buildClient(String baseUrl, Duration readTimeout) {
