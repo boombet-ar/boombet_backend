@@ -3,11 +3,11 @@ package com.boombet.boombet_backend.service;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.util.UriComponentsBuilder;
-
 import java.util.Map;
 
 @Service
@@ -50,7 +50,7 @@ public class BondaCouponService {
                             .queryParam("micrositio_id", micrositeId)
                             .queryParam("codigo_afiliado", codigoAfiliado)
                             .queryParam("page", pageNum)
-                            .queryParam("subcategories", true)
+                            .queryParam("subcategories", false)
                             .queryParam("with_locations", false)
                             .queryParam("orderBy", sortOrder)
                             .build())
@@ -92,4 +92,79 @@ public class BondaCouponService {
             throw new RuntimeException("Error al obtener el cupón: " + e.getMessage());
         }
     }
+
+    /**
+     * Solicita el código de canje para un cupón específico.
+     * POST /api/cupones/{id}/codigo
+     *
+     * @param idUsuario  ID del usuario que solicita el código.
+     * @param idCupon    ID del cupón a canjear.
+     * @param externalId (Opcional) ID externo para referencia.
+     * @return Map con la respuesta que incluye el código (o error).
+     */
+    public Map<String, Object> generarCodigoCupon(Long idUsuario, String idCupon, String externalId) {
+
+
+        /*
+           FALTA LA LOGICA DE LOS PUNTOS
+           SOLO DEBE PERMITIR RETIRAR UN CUPON SI EL USUARIO CUENTA CON LOS PUNTOS,
+           Y DEBE RETIRARLE LOS PUNTOS CORRESPONDIENTES AL USUARIO.
+
+         */
+        // Mantenemos la lógica del ID de afiliado de prueba como en los métodos anteriores
+        String codigoAfiliado = "123456";
+        // En producción sería: String codigoAfiliado = String.valueOf(idUsuario);
+
+        // Preparamos el cuerpo form-data
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("key", apiKey);
+        formData.add("micrositio_id", micrositeId);
+        formData.add("codigo_afiliado", codigoAfiliado);
+
+        if (externalId != null && !externalId.isEmpty()) {
+            formData.add("external_id", externalId);
+        }
+
+        try {
+            return restClient.post()
+                    .uri("/api/cupones/{id}/codigo", idCupon)
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(formData)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+
+        } catch (Exception e) {
+            System.err.println(">>> ❌ Error solicitando código para cupón " + idCupon + ": " + e.getMessage());
+            // Podrías relanzar una excepción personalizada o devolver un mapa de error
+            throw new RuntimeException("Error al solicitar el código del cupón: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Obtiene los últimos 25 cupones solicitados por el afiliado.
+     * GET /api/cupones_recibidos
+     */
+    public Map<String, Object> obtenerHistorialCupones(Long idUsuario) {
+
+        // Mantenemos el ID de prueba "123456" por consistencia con el resto del código actual.
+        // En producción cambiar por: String.valueOf(idUsuario);
+        String codigoAfiliado = "123456";
+
+        try {
+            return restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/cupones_recibidos")
+                            .queryParam("key", apiKey)
+                            .queryParam("micrositio_id", micrositeId)
+                            .queryParam("codigo_afiliado", codigoAfiliado)
+                            .build())
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+
+        } catch (Exception e) {
+            System.err.println(">>> ❌ Error obteniendo historial de cupones: " + e.getMessage());
+            throw new RuntimeException("Error al obtener historial: " + e.getMessage());
+        }
+    }
+
 }

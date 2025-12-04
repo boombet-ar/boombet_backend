@@ -39,7 +39,7 @@ public class BondaCouponController {
         return ResponseEntity.ok(respuesta);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ResponseEntity<Map<String, Object>> getCuponById(
             @AuthenticationPrincipal Usuario usuario,
             @PathVariable("id") String id
@@ -53,4 +53,39 @@ public class BondaCouponController {
         return ResponseEntity.ok(respuesta);
     }
 
+    @PostMapping("/{id}/codigo")
+    public ResponseEntity<Map<String, Object>> solicitarCodigoCupon(
+            @AuthenticationPrincipal Usuario usuario,
+            @PathVariable("id") String id,
+            @RequestBody(required = false) Map<String, String> body
+    ) {
+        if (usuario == null || usuario.getId() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String externalId = (body != null) ? body.get("external_id") : null;
+
+        if (externalId == null || externalId.isEmpty()) {
+            externalId = String.valueOf(usuario.getId());
+        }
+
+        Map<String, Object> respuesta = bondaCouponService.generarCodigoCupon(usuario.getId(), id, externalId);
+
+        return ResponseEntity.ok(respuesta);
+    }
+
+    /**
+     * Endpoint para ver el historial de canjes del usuario.
+     * GET /api/cupones/recibidos
+     */
+    @GetMapping("/recibidos")
+    public ResponseEntity<Map<String, Object>> verHistorialCupones(@AuthenticationPrincipal Usuario usuario) {
+        if (usuario == null || usuario.getId() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Map<String, Object> respuesta = bondaCouponService.obtenerHistorialCupones(usuario.getId());
+
+        return ResponseEntity.ok(respuesta);
+    }
 }
