@@ -115,8 +115,7 @@ public class UsuarioService {
 
 
         String verificacionLink = frontVerifyUrl + verificationToken;
-        //url hardcodeada, arreglar. la url debe ser la del frontend. en esa ruta, el frontend debe pegarle a
-        // /api/users/auth/verify
+
 
         String htmlBody = UsuarioUtils.construirEmailBienvenida(userData.getNombre(), verificacionLink);
 
