@@ -1,5 +1,6 @@
 package com.boombet.boombet_backend.service;
 
+import com.boombet.boombet_backend.utils.CuponesUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -8,11 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
+
+import java.util.List;
 import java.util.Map;
 
 @Service
 public class BondaCouponService {
 
+    private CuponesUtils cuponesUtils;
     private final RestClient restClient;
 
     @Value("${bonda.api.key}")
@@ -36,16 +40,13 @@ public class BondaCouponService {
     public Map<String, Object> obtenerCupones(Long idUsuario, Integer page, String orderBy) {
         int pageNum = (page != null && page > 0) ? page : 1;
         String sortOrder = (orderBy != null && !orderBy.isEmpty()) ? orderBy : "relevant";
-
-        //String codigoAfiliado = String.valueOf(idUsuario);
-
-        String codigoAfiliado = "123456"; //Por ahora usamos este para testear
-
+        // String codigoAfiliado = String.valueOf(idUsuario);
+        String codigoAfiliado = "123456";
 
         try {
-            return restClient.get()
+            Map<String, Object> response = restClient.get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("/api/cupones") // Asume que la base-url no incluye /api/v2 estricto, o ajusta según corresponda
+                            .path("/api/cupones")
                             .queryParam("key", apiKey)
                             .queryParam("micrositio_id", micrositeId)
                             .queryParam("codigo_afiliado", codigoAfiliado)
@@ -56,6 +57,18 @@ public class BondaCouponService {
                             .build())
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+
+            // Lógica delegada a Utils. Buscamos en "results" como vimos en el JSON.
+            if (response != null && response.containsKey("results")) {
+                Object resultsObj = response.get("results");
+                if (resultsObj instanceof List) {
+                    List<Map<String, Object>> cupones = (List<Map<String, Object>>) resultsObj;
+                    // Usamos referencia al método estático de la utilidad
+                    cupones.forEach(CuponesUtils::injectarPrecioPuntos);
+                }
+            }
+
+            return response;
 
         } catch (Exception e) {
             System.err.println(">>> ❌ Error obteniendo cupones de Bonda: " + e.getMessage());
@@ -71,12 +84,11 @@ public class BondaCouponService {
      * @return Map con la respuesta JSON de la API.
      */
     public Map<String, Object> obtenerCuponPorId(Long idUsuario, String idCupon) {
-
         // String codigoAfiliado = String.valueOf(idUsuario);
         String codigoAfiliado = "123456";
 
         try {
-            return restClient.get()
+            Map<String, Object> cupon = restClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/api/cupones/{id}")
                             .queryParam("key", apiKey)
@@ -86,6 +98,13 @@ public class BondaCouponService {
                             .build(idCupon))
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+
+            // También inyectamos puntos en el detalle individual
+            if (cupon != null) {
+                CuponesUtils.injectarPrecioPuntos(cupon);
+            }
+
+            return cupon;
 
         } catch (Exception e) {
             System.err.println(">>> ❌ Error obteniendo cupón " + idCupon + " de Bonda: " + e.getMessage());
@@ -166,5 +185,6 @@ public class BondaCouponService {
             throw new RuntimeException("Error al obtener historial: " + e.getMessage());
         }
     }
+
 
 }
