@@ -1,11 +1,13 @@
 package com.boombet.boombet_backend.controller;
 import com.boombet.boombet_backend.dto.*;
 
+import com.boombet.boombet_backend.entity.Usuario;
 import com.boombet.boombet_backend.service.DatadashService;
 import com.boombet.boombet_backend.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -110,6 +112,18 @@ public class UsuarioController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioDTO.UsuarioResponse> obtenerDatosUsuarioActual(@AuthenticationPrincipal Usuario usuario) {
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+
+        UsuarioDTO.UsuarioResponse response = usuarioService.obtenerDatosDeUsuario(usuario);
+
+        return ResponseEntity.ok(response);
     }
 
 }

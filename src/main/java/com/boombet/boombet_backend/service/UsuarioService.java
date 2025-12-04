@@ -51,6 +51,7 @@ public class UsuarioService {
     private final RestClient restClient;
     private final JugadorService jugadorService;
     private final WebSocketService websocketService;
+
     public UsuarioService(
             JdbcTemplate jdbcTemplate,
             JwtService jwtService,
@@ -61,7 +62,7 @@ public class UsuarioService {
             WebSocketService websocketService,
             @Qualifier("affiliatorRestClient") RestClient restClient,
             EmailService emailService
-    ){
+    ) {
         this.jugadorService = jugadorService;
         this.jdbcTemplate = jdbcTemplate;
         this.jwtService = jwtService;
@@ -72,8 +73,6 @@ public class UsuarioService {
         this.websocketService = websocketService;
         this.emailService = emailService;
     }
-
-
 
 
     @Transactional
@@ -153,7 +152,6 @@ public class UsuarioService {
             }
 
 
-
             System.out.println(websocketLink);
 
             Map<String, Object> respuestaApi = restClient.post()
@@ -162,7 +160,8 @@ public class UsuarioService {
                     .accept(MediaType.APPLICATION_JSON)
                     .body(datosAfiliacion)
                     .retrieve()
-                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {
+                    });
             System.out.println("---- RESPUESTA RECIBIDA, NOTIFICANDO WEBSOCKET ----");
             WebsocketDTO notificacion = new WebsocketDTO();
             notificacion.setWebsocketLink(websocketLink); // Para que el servicio extraiga el ID
@@ -214,7 +213,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByUsernameOrEmail(request.getIdentifier(), request.getIdentifier())
                 .orElseThrow();
 
-        if (!usuario.isVerified()){
+        if (!usuario.isVerified()) {
             throw new RuntimeException("Usuario no verificado");
         }
 
@@ -235,7 +234,7 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    public void solicitarCambioDeContraseña(String email){
+    public void solicitarCambioDeContraseña(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("No existe un usuario registrado con este email."));
 
@@ -264,5 +263,16 @@ public class UsuarioService {
         usuario.setResetToken(null);
 
         usuarioRepository.save(usuario);
+    }
+
+    public UsuarioDTO.UsuarioResponse obtenerDatosDeUsuario(Usuario usuario) {
+
+        return new UsuarioDTO.UsuarioResponse(
+                usuario.getId(),
+                usuario.getUsername(),
+                usuario.getDni(),
+                usuario.getPuntos(),
+                usuario.getEmail()
+        );
     }
 }
