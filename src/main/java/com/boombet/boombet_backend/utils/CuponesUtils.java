@@ -21,11 +21,12 @@ public class CuponesUtils {
             Map.entry("Gastronomía", 1100),  // Gastronomía
             Map.entry("Compras", 1000),  // Compras
             Map.entry("Inmobiliarias", 5000),  // Inmobiliarias
-            Map.entry("Inmuebles", 5000)
+            Map.entry("Inmuebles", 5000),
+            Map.entry("Tratamientos faciales", 900),
+            Map.entry("Gimnasios y Deportes", 900)
     );
 
     public static Integer getPrecio(String categoryId) {
-        // Devuelve el precio del mapa, o 1000 por defecto si la categoría es nueva y no está en la lista
         return PRECIOS.getOrDefault(categoryId, 1000);
     }
 
@@ -58,12 +59,12 @@ public class CuponesUtils {
 
             // Si por alguna razón no se pudo calcular (sin categoría o nombre null), ponemos default
             if (!cupon.containsKey("precio_puntos")) {
-                cupon.put("precio_puntos", 1000);
+                cupon.put("precio_puntos", 100000);
             }
 
         } catch (Exception e) {
             System.err.println("Error calculando precio para cupón: " + e.getMessage());
-            cupon.put("precio_puntos", 1000);
+            cupon.put("precio_puntos", 1000000);
         }
     }
 }

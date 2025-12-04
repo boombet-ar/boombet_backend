@@ -1,5 +1,7 @@
 package com.boombet.boombet_backend.service;
 
+import com.boombet.boombet_backend.dao.UsuarioRepository;
+import com.boombet.boombet_backend.entity.Usuario;
 import com.boombet.boombet_backend.utils.CuponesUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +17,7 @@ import java.util.Map;
 
 @Service
 public class BondaCouponService {
-
+    private final UsuarioRepository usuarioRepository;
     private final RestClient restClient;
 
     @Value("${bonda.api.key}")
@@ -24,8 +26,9 @@ public class BondaCouponService {
     @Value("${bonda.microsite.id}")
     private String micrositeId;
 
-    public BondaCouponService(@Qualifier("bondaCouponsClient") RestClient restClient) {
+    public BondaCouponService(@Qualifier("bondaCouponsClient") RestClient restClient, UsuarioRepository usuarioRepository) {
         this.restClient = restClient;
+        this.usuarioRepository = usuarioRepository;
     }
 
     /**
@@ -92,6 +95,7 @@ public class BondaCouponService {
                             .path("/api/cupones/{id}")
                             .queryParam("key", apiKey)
                             .queryParam("micrositio_id", micrositeId)
+                            .queryParam("subcategories", false)
                             .queryParam("codigo_afiliado", codigoAfiliado)
                             .queryParam("subcategories", true)
                             .build(idCupon))
@@ -121,17 +125,30 @@ public class BondaCouponService {
      */
     public Map<String, Object> generarCodigoCupon(Long idUsuario, String idCupon, String externalId) {
 
+        // 1. Buscar al Usuario
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        /*
-           FALTA LA LOGICA DE LOS PUNTOS
-           SOLO DEBE PERMITIR RETIRAR UN CUPON SI EL USUARIO CUENTA CON LOS PUNTOS,
-           Y DEBE RETIRARLE LOS PUNTOS CORRESPONDIENTES AL USUARIO.
+        // 2. Obtener el cupón para saber su PRECIO
+        // Reutilizamos tu método obtenerCuponPorId que ya calcula el precio usando CuponesUtils
+        Map<String, Object> cuponDetalle = obtenerCuponPorId(idUsuario, idCupon);
 
-         */
+        // Asumimos que "precio_puntos" existe porque obtenerCuponPorId lo inyecta
+        Integer precio = (Integer) cuponDetalle.getOrDefault("precio_puntos", 1000);
 
-        // Mantenemos la lógica del ID de afiliado de prueba como en los métodos anteriores
-        String codigoAfiliado = "123456";
-        // En producción sería: String codigoAfiliado = String.valueOf(idUsuario);
+        // 3. Validar saldo
+        int puntosActuales = (usuario.getPuntos() != null) ? usuario.getPuntos() : 0;
+
+        if (puntosActuales < precio) {
+            throw new RuntimeException("Saldo insuficiente. Tienes " + puntosActuales + " puntos, pero el cupón cuesta " + precio + ".");
+        }
+
+        // 4. Descontar puntos (cobro preventivo)
+        usuario.setPuntos(puntosActuales - precio);
+        usuarioRepository.save(usuario);
+
+        // --- LÓGICA DE BONDA ---
+        String codigoAfiliado = "123456"; // O String.valueOf(idUsuario) en prod
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("key", apiKey);
@@ -143,17 +160,23 @@ public class BondaCouponService {
         }
 
         try {
-            return restClient.post()
+            // 5. Intentar obtener el código
+            Map<String, Object> response = restClient.post()
                     .uri("/api/cupones/{id}/codigo", idCupon)
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .body(formData)
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
 
+            return response;
+
         } catch (Exception e) {
-            System.err.println(">>> ❌ Error solicitando código para cupón " + idCupon + ": " + e.getMessage());
-            // Podrías relanzar una excepción personalizada o devolver un mapa de error
-            throw new RuntimeException("Error al solicitar el código del cupón: " + e.getMessage());
+            // 6. ROLLBACK MANUAL: Si Bonda falla, le devolvemos los puntos al usuario
+            System.err.println(">>> ❌ Error en Bonda. Devolviendo puntos al usuario...");
+            usuario.setPuntos(puntosActuales); // Restauramos el valor original
+            usuarioRepository.save(usuario);
+
+            throw new RuntimeException("Error al solicitar el código (puntos devueltos): " + e.getMessage());
         }
     }
 
