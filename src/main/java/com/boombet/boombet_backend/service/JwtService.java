@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.util.Base64;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +37,7 @@ public class JwtService {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
-                .setSubject(user.getEmail())
+                .setSubject(email)
                 .claim("idJugador", jugadorId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000*60*60*24))

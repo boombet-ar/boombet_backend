@@ -12,7 +12,7 @@ public class CuponesUtils {
             Map.entry("Teatros", 800),   // Teatros
             Map.entry("Entretenimientos", 1000),  // Entretenimientos
             Map.entry("Educación", 500),   // Educación
-            Map.entry("Indumentaria", 1200),  // Indumentaria
+            Map.entry("Indumentaria, Calzado y Moda", 1200),  // Indumentaria
             Map.entry("Belleza y Salud", 900),   // Belleza y Salud
             Map.entry("Servicios", 600),   // Servicios
             Map.entry("Cines", 800),   // Cines
@@ -40,31 +40,30 @@ public class CuponesUtils {
                     List<Map<String, Object>> categorias = (List<Map<String, Object>>) categoriasObj;
 
                     if (!categorias.isEmpty()) {
-                        // Tomamos la primera categoría disponible
                         Map<String, Object> primeraCategoria = categorias.get(0);
-                        Object idObj = primeraCategoria.get("id"); // Puede venir como Integer o String
 
-                        if (idObj != null) {
-                            String catId = String.valueOf(idObj);
+                        Object nameObj = primeraCategoria.get("nombre");
 
-                            // Usamos tu Utils existente
-                            Integer precio = CuponesUtils.getPrecio(catId);
+                        if (nameObj != null) {
+                            String catName = String.valueOf(nameObj);
 
-                            // Agregamos el nuevo campo al mapa del cupón
+
+                            Integer precio = CuponesUtils.getPrecio(catName);
+
                             cupon.put("precio_puntos", precio);
                         }
                     }
                 }
             }
 
-            // Si por alguna razón no se pudo calcular (sin categoría), ponemos default
+            // Si por alguna razón no se pudo calcular (sin categoría o nombre null), ponemos default
             if (!cupon.containsKey("precio_puntos")) {
-                cupon.put("precio_puntos", 1000); // Default seguro
+                cupon.put("precio_puntos", 1000);
             }
 
         } catch (Exception e) {
             System.err.println("Error calculando precio para cupón: " + e.getMessage());
-            cupon.put("precio_puntos", 1000); // Fallback en caso de error de estructura
+            cupon.put("precio_puntos", 1000);
         }
     }
 }

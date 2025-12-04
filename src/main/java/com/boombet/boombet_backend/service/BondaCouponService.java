@@ -16,7 +16,6 @@ import java.util.Map;
 @Service
 public class BondaCouponService {
 
-    private CuponesUtils cuponesUtils;
     private final RestClient restClient;
 
     @Value("${bonda.api.key}")
@@ -99,7 +98,6 @@ public class BondaCouponService {
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
 
-            // También inyectamos puntos en el detalle individual
             if (cupon != null) {
                 CuponesUtils.injectarPrecioPuntos(cupon);
             }
@@ -130,11 +128,11 @@ public class BondaCouponService {
            Y DEBE RETIRARLE LOS PUNTOS CORRESPONDIENTES AL USUARIO.
 
          */
+
         // Mantenemos la lógica del ID de afiliado de prueba como en los métodos anteriores
         String codigoAfiliado = "123456";
         // En producción sería: String codigoAfiliado = String.valueOf(idUsuario);
 
-        // Preparamos el cuerpo form-data
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("key", apiKey);
         formData.add("micrositio_id", micrositeId);
