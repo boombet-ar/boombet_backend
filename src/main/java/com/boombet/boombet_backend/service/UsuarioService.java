@@ -271,7 +271,7 @@ public class UsuarioService {
                 usuario.getId(),
                 usuario.getUsername(),
                 usuario.getDni(),
-                usuario.getPuntos(),
+                //usuario.getPuntos(),
                 usuario.getEmail()
         );
     }

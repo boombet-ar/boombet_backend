@@ -102,10 +102,13 @@ public class BondaCouponService {
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
 
+            /*
             if (cupon != null) {
                 CuponesUtils.injectarPrecioPuntos(cupon);
             }
 
+            Por ahora no usamos el sistema de puntos
+            */
             return cupon;
 
         } catch (Exception e) {
@@ -136,6 +139,7 @@ public class BondaCouponService {
         // Asumimos que "precio_puntos" existe porque obtenerCuponPorId lo inyecta
         Integer precio = (Integer) cuponDetalle.getOrDefault("precio_puntos", 1000);
 
+        /*
         // 3. Validar saldo
         int puntosActuales = (usuario.getPuntos() != null) ? usuario.getPuntos() : 0;
 
@@ -147,6 +151,8 @@ public class BondaCouponService {
         usuario.setPuntos(puntosActuales - precio);
         usuarioRepository.save(usuario);
 
+        Por ahora no usamos el sistema de puntos
+        */
         // --- LÓGICA DE BONDA ---
         String codigoAfiliado = "123456"; // O String.valueOf(idUsuario) en prod
 
@@ -173,8 +179,8 @@ public class BondaCouponService {
         } catch (Exception e) {
             // 6. ROLLBACK MANUAL: Si Bonda falla, le devolvemos los puntos al usuario
             System.err.println(">>> ❌ Error en Bonda. Devolviendo puntos al usuario...");
-            usuario.setPuntos(puntosActuales); // Restauramos el valor original
-            usuarioRepository.save(usuario);
+            //usuario.setPuntos(puntosActuales); // Restauramos el valor original. Descomentar cuando implementemos puntos
+            //usuarioRepository.save(usuario);
 
             throw new RuntimeException("Error al solicitar el código (puntos devueltos): " + e.getMessage());
         }

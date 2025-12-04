@@ -78,8 +78,8 @@ public class Usuario implements UserDetails {
     @Column(nullable=false)
     private String telefono;
 
-    @Column(nullable=true, columnDefinition = "integer default 0")
-    private Integer puntos;
+    //@Column(nullable=true, columnDefinition = "integer default 0")
+    //private Integer puntos;
 
     @Enumerated(EnumType.STRING)
     Role role;

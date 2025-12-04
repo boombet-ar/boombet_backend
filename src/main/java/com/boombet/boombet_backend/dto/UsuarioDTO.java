@@ -5,7 +5,7 @@ public class UsuarioDTO {
         Long id,
         String username,
         String dni,
-        Integer puntos,
+        //Integer puntos,
         String email
     ){}
 }
