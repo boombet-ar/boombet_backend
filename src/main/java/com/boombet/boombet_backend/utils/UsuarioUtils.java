@@ -223,61 +223,71 @@ public class UsuarioUtils {
         String textColorSecondary = "#b7c4bd";
 
         return """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>Recuperar Contraseña</title>
-                <style>
-                    .btn-neon:hover {
-                        background-color: #3ed67e !important;
-                        box-shadow: 0 0 15px rgba(76, 230, 139, 0.6) !important;
-                    }
-                </style>
-            </head>
-            <body style="margin: 0; padding: 0; background-color: %s; font-family: 'Segoe UI', sans-serif;">
-                <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="background-color: %s; padding: 40px 0;">
-                    <tr>
-                        <td align="center">
-                            <table role="presentation" width="600" style="background-color: %s; border-radius: 12px; max-width: 600px; width: 90%%; border: 1px solid #1f3a30; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                                <tr>
-                                    <td style="padding: 30px 0; text-align: center; border-bottom: 2px solid %s;">
-                                        <h1 style="margin: 0; color: %s; font-size: 32px; font-style: italic;">
-                                            BOOM<span style="color: %s;">BET</span>
-                                        </h1>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 40px 40px 30px 40px; text-align: center;">
-                                        <h2 style="color: %s; font-size: 24px; margin-bottom: 20px; text-transform: uppercase;">
-                                            ¿OLVIDASTE TU CONTRASEÑA? 🔑
-                                        </h2>
-                                        <p style="color: %s; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-                                            Hola <strong>%s</strong>,<br>
-                                            No te preocupes, es algo que pasa. Hacé clic en el botón de abajo para crear una nueva contraseña y volver al juego.
-                                        </p>
-                                        
-                                        <a href="%s" class="btn-neon" style="display: inline-block; padding: 14px 30px; background-color: %s; color: #09120f; font-weight: 800; text-decoration: none; border-radius: 50px; text-transform: uppercase;">
-                                            RESTABLECER CONTRASEÑA
-                                        </a>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Recuperar Contraseña</title>
+            <style>
+                .btn-neon:hover {
+                    background-color: #3ed67e !important;
+                    box-shadow: 0 0 15px rgba(76, 230, 139, 0.6) !important;
+                }
+            </style>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: %s; font-family: 'Segoe UI', sans-serif;">
+            <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="background-color: %s; padding: 40px 0;">
+                <tr>
+                    <td align="center">
+                        <table role="presentation" width="600" style="background-color: %s; border-radius: 12px; max-width: 600px; width: 90%%; border: 1px solid #1f3a30; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                            <tr>
+                                <td style="padding: 30px 0; text-align: center; border-bottom: 2px solid %s;">
+                                    <h1 style="margin: 0; color: %s; font-size: 32px; font-style: italic;">
+                                        BOOM<span style="color: %s;">BET</span>
+                                    </h1>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 40px 40px 30px 40px; text-align: center;">
+                                    <h2 style="color: %s; font-size: 24px; margin-bottom: 20px; text-transform: uppercase;">
+                                        ¿OLVIDASTE TU CONTRASEÑA? 🔑
+                                    </h2>
+                                    <p style="color: %s; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                                        Hola <strong>%s</strong>,<br>
+                                        No te preocupes, es algo que pasa. Hacé clic en el botón de abajo para crear una nueva contraseña y volver al juego.
+                                    </p>
+                                    
+                                    <a href="%s" class="btn-neon" style="display: inline-block; padding: 14px 30px; background-color: %s; color: #09120f; font-weight: 800; text-decoration: none; border-radius: 50px; text-transform: uppercase;">
+                                        RESTABLECER CONTRASEÑA
+                                    </a>
 
-                                        <p style="color: %s; font-size: 13px; margin-top: 30px;">
-                                            Si no solicitaste este cambio, simplemente ignorá este correo. Tu cuenta está segura.
+                                    <p style="color: %s; font-size: 13px; margin-top: 40px; margin-bottom: 10px;">
+                                            Si el botón no funciona, copiá y pegá este enlace:
                                         </p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </body>
-            </html>
-            """.formatted(
-                darkBgMain, darkBgMain, darkBgCard, verdeNeon, // Colores estructura
-                textColorPrimary, verdeNeon, // Logo
-                textColorPrimary, textColorSecondary, nombre, // Textos
-                link, verdeNeon, // Botón
-                textColorSecondary // Disclaimer final
+                                        <p style="margin: 0; word-break: break-all; background-color: #0a1612; padding: 10px; border-radius: 5px; border: 1px solid #1f3a30;">
+                                            <a href="%s" style="color: %s; text-decoration: none; font-size: 12px;">
+                                                %s
+                                            </a>
+                                        </p>
+                                    <p style="color: %s; font-size: 13px; margin-top: 30px;">
+                                        Si no solicitaste este cambio, simplemente ignorá este correo. Tu cuenta está segura.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """.formatted(
+                darkBgMain, darkBgMain, darkBgCard, verdeNeon, // 1-4: Estructura y bordes
+                textColorPrimary, verdeNeon,                   // 5-6: Logo
+                textColorPrimary, textColorSecondary, nombre,  // 7-9: Títulos y Saludo
+                link, verdeNeon,                               // 10-11: Botón principal
+                textColorSecondary,                            // 12: Texto "Si el botón no funciona..."
+                link, verdeNeon, link,                         // 13-15: Link manual (href, color, texto)
+                textColorSecondary                             // 16: Disclaimer final
         );
     }
 }

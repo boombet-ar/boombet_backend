@@ -39,6 +39,7 @@ public class BondaCouponController {
         return ResponseEntity.ok(respuesta);
     }
 
+    //Visualizar un cupon
     @GetMapping("/id/{id}")
     public ResponseEntity<Map<String, Object>> getCuponById(
             @AuthenticationPrincipal Usuario usuario,
@@ -53,6 +54,13 @@ public class BondaCouponController {
         return ResponseEntity.ok(respuesta);
     }
 
+    /**
+     * Canjear un cupon
+     * @param usuario
+     * @param id
+     * @param body
+     *
+     */
     @PostMapping("/{id}/codigo")
     public ResponseEntity<Map<String, Object>> solicitarCodigoCupon(
             @AuthenticationPrincipal Usuario usuario,
@@ -75,10 +83,11 @@ public class BondaCouponController {
     }
 
     /**
-     * Endpoint para ver el historial de canjes del usuario.
+     * Endpoint para ver el historial de canjes del usuario. Muestra los ultimos 25 cupones canjeados.
      * GET /api/cupones/recibidos
      */
     @GetMapping("/recibidos")
+
     public ResponseEntity<Map<String, Object>> verHistorialCupones(@AuthenticationPrincipal Usuario usuario) {
         if (usuario == null || usuario.getId() == null) {
             return ResponseEntity.status(401).build();

@@ -1,5 +1,6 @@
 package com.boombet.boombet_backend.service;
 
+import com.boombet.boombet_backend.dao.JugadorRepository;
 import com.boombet.boombet_backend.dao.UsuarioRepository;
 import com.boombet.boombet_backend.dto.*;
 import com.boombet.boombet_backend.entity.Jugador;
@@ -23,6 +24,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -37,6 +39,8 @@ public class UsuarioService {
     @Value("${affiliator.api.key}")
     private String affiliatorToken;
 
+
+
     @Autowired
     @Lazy
     private UsuarioService self;
@@ -47,7 +51,7 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository usuarioRepository;
     private final AuthenticationManager authenticationManager;
-
+    private final JugadorRepository jugadorRepository;
     private final RestClient restClient;
     private final JugadorService jugadorService;
     private final WebSocketService websocketService;
@@ -61,7 +65,7 @@ public class UsuarioService {
             JugadorService jugadorService,
             WebSocketService websocketService,
             @Qualifier("affiliatorRestClient") RestClient restClient,
-            EmailService emailService
+            EmailService emailService, JugadorRepository jugadorRepository
     ) {
         this.jugadorService = jugadorService;
         this.jdbcTemplate = jdbcTemplate;
@@ -72,6 +76,7 @@ public class UsuarioService {
         this.restClient = restClient;
         this.websocketService = websocketService;
         this.emailService = emailService;
+        this.jugadorRepository = jugadorRepository;
     }
 
 
@@ -112,11 +117,14 @@ public class UsuarioService {
 
         usuarioRepository.save(nuevoUsuario);
 
+        String htmlBody;
 
-        String verificacionLink = frontVerifyUrl + verificationToken;
-
-
-        String htmlBody = UsuarioUtils.construirEmailBienvenida(userData.getNombre(), verificacionLink);
+        if (inputWrapper.getN8nWebhookLink() != null){
+            htmlBody = UsuarioUtils.construirEmailBienvenida(userData.getNombre(), inputWrapper.getN8nWebhookLink() + verificationToken);
+        }else {
+            String verificacionLink = frontVerifyUrl + verificationToken;
+            htmlBody = UsuarioUtils.construirEmailBienvenida(userData.getNombre(), verificacionLink);
+        }
 
         emailService.enviarCorreo(
                 nuevoUsuario.getEmail(),
@@ -151,8 +159,6 @@ public class UsuarioService {
                 return;
             }
 
-
-            System.out.println(websocketLink);
 
             Map<String, Object> respuestaApi = restClient.post()
                     .uri("/register/" + provinciaAlias)
@@ -275,4 +281,22 @@ public class UsuarioService {
                 usuario.getEmail()
         );
     }
+
+    @Transactional
+    public void desafiliar(Long idUsuario){ //podría ser un soft delete?
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario"));
+
+        Jugador jugador = jugadorRepository.findById(usuario.getJugador().getId())
+            .orElseThrow(() -> new IllegalArgumentException("No se encontró el jugador"));
+
+        try{
+            usuarioRepository.delete(usuario);
+            jugadorRepository.delete(jugador);
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
+
 }

@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +24,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
+
+@SQLDelete(sql = "UPDATE usuarios SET is_deleted = true, deleted_at = NOW() WHERE id = ?")
+@SQLRestriction("is_deleted = false")
 public class Usuario implements UserDetails {
     public enum Role{
         USER,
@@ -32,6 +38,7 @@ public class Usuario implements UserDetails {
         Masculino,
         Femenino;
 
+        private boolean deleted = Boolean.FALSE;
 
         public static Genero fromString(String text) {
             for (Genero g : Genero.values()) {
@@ -89,7 +96,7 @@ public class Usuario implements UserDetails {
     private String username;
 
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_jugador", referencedColumnName = "id")
     private Jugador jugador;
 
