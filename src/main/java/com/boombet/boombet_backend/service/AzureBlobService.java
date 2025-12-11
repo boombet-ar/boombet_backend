@@ -1,36 +1,84 @@
-// src/main/java/com/boombet/boombet_backend/service/AzureBlobService.java
 package com.boombet.boombet_backend.service;
 
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.models.BlobHttpHeaders;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.UUID;
 
-//Este servicio tambien puede servir para cuando implementemos las imagenes de perfil
 @Service
 public class AzureBlobService {
 
-    // Aquí va la inyección del cliente de Azure (BlobServiceClient o BlobContainerClient)
+    private final BlobServiceClient blobServiceClient;
+
+    public AzureBlobService(BlobServiceClient blobServiceClient) {
+        this.blobServiceClient = blobServiceClient;
+    }
 
     /**
-     * Lógica para borrar un blob usando su URL/Path.
+     * Sube un archivo a un contenedor específico de Azure y retorna la URL pública.
+     * @param file El archivo a subir.
+     * @param containerName El nombre del contenedor (ej: "publicidades", "usuarios").
      */
-    public void deleteBlob(String mediaUrl) {
-        if (mediaUrl == null || mediaUrl.isEmpty()) {
-            // No hay archivo para borrar. Es una publicidad de solo texto (si fuera permitido)
-            return;
-        }
-
-        // --- LÓGICA DE AZURE SDK AQUÍ ---
+    public String uploadFile(MultipartFile file, String containerName) {
         try {
-            // Ejemplo de cómo obtendrías el nombre del blob desde la URL
-            // String blobName = extractBlobName(mediaUrl);
+            BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(containerName);
 
-            // blobClient.deleteIfExists();
-            System.out.println(">>> 🗑️ Borrando archivo de Azure: " + mediaUrl);
+            if (!containerClient.exists()) {
+                containerClient.create();
+            }
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                    : "";
+            String fileName = UUID.randomUUID().toString() + extension;
+
+            BlobClient blobClient = containerClient.getBlobClient(fileName);
+            BlobHttpHeaders headers = new BlobHttpHeaders().setContentType(file.getContentType());
+
+            blobClient.upload(file.getInputStream(), file.getSize());
+            blobClient.setHttpHeaders(headers);
+
+            return blobClient.getBlobUrl();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Error subiendo archivo al contenedor " + containerName, e);
+        }
+    }
+
+    /**
+     * Borra un archivo de un contenedor específico.
+     * @param mediaUrl La URL completa del archivo.
+     * @param containerName El nombre del contenedor donde está el archivo.
+     */
+    public void deleteBlob(String mediaUrl, String containerName) {
+        if (mediaUrl == null || mediaUrl.isEmpty()) return;
+
+        try {
+            BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(containerName);
+            String blobName = extractBlobNameFromUrl(mediaUrl);
+            BlobClient blobClient = containerClient.getBlobClient(blobName);
+
+            if (blobClient.exists()) {
+                blobClient.delete();
+                System.out.println(">>> 🗑️ Archivo eliminado de " + containerName + ": " + blobName);
+            }
 
         } catch (Exception e) {
-            // Es CRUCIAL que si Azure falla, lances una RuntimeException para que Spring
-            // sepa que la operación debe fallar.
-            throw new RuntimeException("Fallo la eliminación del BLOB: " + mediaUrl, e);
+            throw new RuntimeException("Error borrando blob de " + containerName + ": " + mediaUrl, e);
+        }
+    }
+
+    private String extractBlobNameFromUrl(String url) {
+        try {
+            return url.substring(url.lastIndexOf('/') + 1);
+        } catch (Exception e) {
+            return url;
         }
     }
 }

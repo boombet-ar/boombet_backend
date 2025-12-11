@@ -2,14 +2,17 @@
 package com.boombet.boombet_backend.service;
 
 import com.boombet.boombet_backend.dao.PublicidadRepository;
+import com.boombet.boombet_backend.dto.PublicidadDTO;
 import com.boombet.boombet_backend.entity.Publicidad;
 import jakarta.transaction.Transactional; // Importar jakarta.transaction
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,12 +21,15 @@ public class PublicidadService {
     private final PublicidadRepository publicidadRepository;
     private final AzureBlobService azureBlobService;
 
+    @Value("${spring.cloud.azure.storage.blob.container-name-publicidades}")
+    private String containerPublicidad;
+
     /**
      * Tarea programada para borrar publicidades expiradas y sus archivos multimedia asociados.
      */
     @Scheduled(cron = "0 0 * * * *")
-    @Transactional // Garantiza que si falla el borrado de Azure O la DB, la operación es ATÓMICA.
-    public void borrarPublicidadesExpiradas() {
+    @Transactional
+    public void borrarPublicidadesExpiradas() { //Cuando se pushee a produccion hay que re-chequear el tema de la zona horaria.
         LocalDateTime now = LocalDateTime.now();
         System.out.println(">>> ⏰ Iniciando limpieza de publicidades expiradas a las: " + now);
 
@@ -39,7 +45,7 @@ public class PublicidadService {
         for (Publicidad pub : expiradas) {
             try {
 
-                azureBlobService.deleteBlob(pub.getMediaUrl()); //Ajustar
+                azureBlobService.deleteBlob(pub.getMediaUrl(), containerPublicidad); //Ajustar
 
                 publicidadRepository.delete(pub);
                 System.out.println(">>> ✅ Borrado exitoso: ID=" + pub.getId() + ", URL=" + pub.getMediaUrl());
@@ -50,5 +56,25 @@ public class PublicidadService {
             }
         }
         System.out.println("Limpieza finalizada.");
+    }
+
+    public List<PublicidadDTO> obtenerPublicidadesActivas() {
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Publicidad> activas = publicidadRepository.findActivePublicities(now);
+
+        return activas.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private PublicidadDTO mapToDTO(Publicidad entidad) {
+        return new PublicidadDTO(
+                entidad.getCasinoGralId(),
+                entidad.getStartAt(),
+                entidad.getEndAt(),
+                entidad.getMediaUrl(),
+                entidad.getText()
+        );
     }
 }
