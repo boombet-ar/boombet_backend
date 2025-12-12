@@ -58,7 +58,7 @@ public class PublicidadService {
         System.out.println("Limpieza finalizada.");
     }
 
-    public List<PublicidadDTO> obtenerPublicidadesActivas() {
+    public List<PublicidadDTO> obtenerPublicidadesActivas() { //Devuelve todas las que están dentro del rango horario
         LocalDateTime now = LocalDateTime.now();
 
         List<Publicidad> activas = publicidadRepository.findActivePublicities(now);
@@ -67,6 +67,15 @@ public class PublicidadService {
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
+
+    public List<PublicidadDTO> obtenerPublicidadesPorJugador(Long idJugador) {
+        List<Publicidad> publicidades = publicidadRepository.findByJugadorAfiliaciones(idJugador);
+
+        return publicidades.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
 
     private PublicidadDTO mapToDTO(Publicidad entidad) {
         return new PublicidadDTO(

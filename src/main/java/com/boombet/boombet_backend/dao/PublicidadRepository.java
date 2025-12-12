@@ -17,4 +17,15 @@ public interface PublicidadRepository extends JpaRepository<Publicidad, Long> {
 
     @Query("SELECT p FROM Publicidad p WHERE p.startAt <= :now AND p.endAt > :now")
     List<Publicidad> findActivePublicities(@Param("now") LocalDateTime now);
+
+    @Query(value = """
+        SELECT DISTINCT p.* FROM publicidades p
+        JOIN casinos c ON c.casino_gral_id = p.casino_gral_id
+        JOIN afiliaciones a ON a.id_casino = c.id
+        WHERE a.id_jugador = :jugadorId
+        AND p.start_at <= NOW() AND p.end_at > NOW()
+        """, nativeQuery = true)
+    List<Publicidad> findByJugadorAfiliaciones(@Param("jugadorId") Long jugadorId);
+
 }
+

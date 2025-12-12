@@ -59,7 +59,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                    // 4. ESTA LÍNEA ES LA QUE TE FALTABA (La que te deja pasar)
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
                     System.out.println("DEBUG: El token es INVÁLIDO.");

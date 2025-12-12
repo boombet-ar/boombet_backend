@@ -34,7 +34,7 @@ public class JwtService {
         Long jugadorId = (user.getJugador() != null) ? user.getJugador().getId() : null;
         String email = user.getEmail();
 
-        //EL JWT SOLO TIENE EL ID DE JUGADOR, NO DE USUARIO
+
         return Jwts
                 .builder()
                 .setClaims(extraClaims)

@@ -23,7 +23,6 @@ public class UsuarioController {
     public UsuarioController(UsuarioService usuarioService, DatadashService datadashService) {
         this.usuarioService = usuarioService;
         this.datadashService = datadashService;
-
     }
 
     @PostMapping("/auth/register")
