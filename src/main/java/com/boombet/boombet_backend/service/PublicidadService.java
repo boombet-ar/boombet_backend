@@ -71,6 +71,7 @@ public class PublicidadService {
     public List<PublicidadDTO> obtenerPublicidadesPorJugador(Long idJugador) {
         List<Publicidad> publicidades = publicidadRepository.findByJugadorAfiliaciones(idJugador);
 
+        System.out.println(LocalDateTime.now());
         return publicidades.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());

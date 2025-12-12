@@ -17,8 +17,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE players SET status = 'DELETED' WHERE id = ?")
-@SQLRestriction("status <> 'DELETED'")
+@SQLDelete(sql = "UPDATE jugadores SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
 public class Jugador {
 
     @Id
