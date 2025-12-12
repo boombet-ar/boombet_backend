@@ -11,6 +11,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,13 +26,14 @@ public class PublicidadService {
     @Value("${spring.cloud.azure.storage.blob.container-name-publicidades}")
     private String containerPublicidad;
 
+    private static final ZoneId ARGENTINA_ZONE = ZoneId.of("America/Argentina/Buenos_Aires");
     /**
      * Tarea programada para borrar publicidades expiradas y sus archivos multimedia asociados.
      */
     @Scheduled(cron = "0 0 * * * *")
     @Transactional
     public void borrarPublicidadesExpiradas() { //Cuando se pushee a produccion hay que re-chequear el tema de la zona horaria.
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = ZonedDateTime.now(ARGENTINA_ZONE).toLocalDateTime();
         System.out.println(">>> ⏰ Iniciando limpieza de publicidades expiradas a las: " + now);
 
         List<Publicidad> expiradas = publicidadRepository.findByEndAtBefore(now);
@@ -59,7 +62,7 @@ public class PublicidadService {
     }
 
     public List<PublicidadDTO> obtenerPublicidadesActivas() { //Devuelve todas las que están dentro del rango horario
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = ZonedDateTime.now(ARGENTINA_ZONE).toLocalDateTime();
 
         List<Publicidad> activas = publicidadRepository.findActivePublicities(now);
 
@@ -70,8 +73,7 @@ public class PublicidadService {
 
     public List<PublicidadDTO> obtenerPublicidadesPorJugador(Long idJugador) {
         List<Publicidad> publicidades = publicidadRepository.findByJugadorAfiliaciones(idJugador);
-
-        System.out.println(LocalDateTime.now());
+        System.out.println(ZonedDateTime.now(ARGENTINA_ZONE).toLocalDateTime());
         return publicidades.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());

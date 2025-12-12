@@ -23,7 +23,8 @@ public interface PublicidadRepository extends JpaRepository<Publicidad, Long> {
         JOIN casinos c ON c.casino_gral_id = p.casino_gral_id
         JOIN afiliaciones a ON a.id_casino = c.id
         WHERE a.id_jugador = :jugadorId
-        AND p.start_at <= NOW() AND p.end_at > NOW()
+        AND p.start_at <= (NOW() AT TIME ZONE 'America/Argentina/Buenos_Aires') 
+        AND p.end_at > (NOW() AT TIME ZONE 'America/Argentina/Buenos_Aires')
         """, nativeQuery = true)
     List<Publicidad> findByJugadorAfiliaciones(@Param("jugadorId") Long jugadorId);
 
