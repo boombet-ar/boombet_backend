@@ -98,15 +98,18 @@ public class UsuarioService {
 
         UsuarioUtils.validarFormatoPassword(userData.getPassword());
 
-        Jugador jugador = jugadorRepository.findByEmail(userData.getEmail())
-                .or(() -> jugadorRepository.findByDni(userData.getDni()))
-                .orElse(new Jugador());
 
         String hashedPass = passwordEncoder.encode(userData.getPassword());
 
         Usuario nuevoUsuario = usuarioRepository.findByEmail(userData.getEmail())
                 .or(() -> usuarioRepository.findByDni(userData.getDni()))
                 .orElse(new Usuario());
+
+
+        Jugador jugador = jugadorRepository.findByEmail(userData.getEmail())
+                .or(() -> jugadorRepository.findByDni(userData.getDni()))
+                .orElseGet( () -> jugadorService.crearJugador(userData));
+
 
         if (nuevoUsuario.getId() != null && nuevoUsuario.isVerified()) {
             throw new IllegalArgumentException("Ya existe una cuenta verificada con este correo o DNI");
