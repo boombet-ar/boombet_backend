@@ -1,18 +1,14 @@
 package com.boombet.boombet_backend.controller;
 
-import com.azure.core.annotation.Get;
 import com.boombet.boombet_backend.dto.PublicidadDTO;
 import com.boombet.boombet_backend.entity.Usuario;
-import com.boombet.boombet_backend.service.JugadorService;
 import com.boombet.boombet_backend.service.PublicidadService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Date;
 import java.util.List;
 
 @RestController

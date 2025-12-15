@@ -80,6 +80,7 @@ public class UsuarioService {
     }
 
 
+
     @Transactional
     public void register(RegistroRequestDTO inputWrapper) {
         /*
@@ -88,13 +89,24 @@ public class UsuarioService {
          * Crea un jugador y lo vincula con el usuario
          * */
 
+
         AffiliationDTO userData = inputWrapper.getConfirmedData();
 
+        //Si ya habia un usuario sin verificar, lo pisa
+        //Si habia un usuario verificado, error
+        //Si no habia nada, lo crea
 
         UsuarioUtils.validarFormatoPassword(userData.getPassword());
-        if (usuarioRepository.existsByEmail(userData.getEmail())) {
-            throw new IllegalArgumentException("Ya existe una cuenta con este correo");
+
+        boolean usuarioPrevio =
+                (usuarioRepository.existsByEmail(userData.getEmail()) || usuarioRepository.existsByDni(userData.getDni()));
+
+        boolean usuarioPrevioVerificado = usuarioPrevio && usuarioRepository.findByEmail(userData.getEmail()).get().isVerified();
+
+        if (usuarioPrevioVerificado) {
+            throw new IllegalArgumentException("Ya existe una cuenta con este correo o dni");
         }
+
 
         Jugador jugador = jugadorService.crearJugador(userData);
 
@@ -119,7 +131,7 @@ public class UsuarioService {
 
         String htmlBody;
 
-        if (inputWrapper.getN8nWebhookLink() != null){
+        if (inputWrapper.getN8nWebhookLink() != null){ //Logica para determinar si ingreso por form o por app
             htmlBody = UsuarioUtils.construirEmailBienvenida(userData.getNombre(), inputWrapper.getN8nWebhookLink() + verificationToken);
         }else {
             String verificacionLink = frontVerifyUrl + verificationToken;

@@ -50,7 +50,6 @@ public class JugadorService {
         return jugadorDto;
     }
 
-    @PreAuthorize("authentication.principal.jugador?.id == #id")
     public JugadorDTO actualizarJugador(Long id, JugadorDTO dto) {
         Jugador jugador = jugadorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
@@ -76,7 +75,8 @@ public class JugadorService {
         if (dto.getCp() != null) { jugador.setCp(dto.getCp()); }
 
         JugadorDTO jugadorActualizado = mapToDto(jugador);
-        jugadorActualizado.setUsername(dto.getUsername());
+        jugadorActualizado.setUsername(usuario.getUsername());
+        jugadorActualizado.setIdJugador(jugador.getId());
         jugadorRepository.save(jugador);
         usuarioRepository.save(usuario);
         return jugadorActualizado;

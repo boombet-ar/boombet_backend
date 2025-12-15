@@ -1,9 +1,11 @@
 package com.boombet.boombet_backend.controller;
 
 import com.boombet.boombet_backend.dto.JugadorDTO;
+import com.boombet.boombet_backend.entity.Usuario;
 import com.boombet.boombet_backend.service.JugadorService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @AllArgsConstructor
@@ -23,13 +25,13 @@ public class JugadorController {
         return ResponseEntity.ok(jugador);
     }
 
-    @PatchMapping("/update/{id}")
+    @PatchMapping("/update")
     public ResponseEntity<JugadorDTO> updateJugador(
-            @PathVariable Long id,
-            @RequestBody JugadorDTO jugadorDto) {
+            @AuthenticationPrincipal Usuario usuario, // <--- Aquí se inyecta la seguridad
+            @RequestBody JugadorDTO dto) {
 
-        JugadorDTO jugadorActualizado = jugadorService.actualizarJugador(id, jugadorDto);
+        JugadorDTO actualizado = jugadorService.actualizarJugador(usuario.getJugador().getId(), dto);
 
-        return ResponseEntity.ok(jugadorActualizado);
+        return ResponseEntity.ok(actualizado);
     }
 }
