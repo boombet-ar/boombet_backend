@@ -1,10 +1,9 @@
-// src/main/java/com/boombet/boombet_backend/service/PublicidadService.java
 package com.boombet.boombet_backend.service;
 
 import com.boombet.boombet_backend.dao.PublicidadRepository;
 import com.boombet.boombet_backend.dto.PublicidadDTO;
 import com.boombet.boombet_backend.entity.Publicidad;
-import jakarta.transaction.Transactional; // Importar jakarta.transaction
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -32,7 +31,7 @@ public class PublicidadService {
      */
     @Scheduled(cron = "0 0 * * * *")
     @Transactional
-    public void borrarPublicidadesExpiradas() { //Cuando se pushee a produccion hay que re-chequear el tema de la zona horaria.
+    public void borrarPublicidadesExpiradas() {
         LocalDateTime now = ZonedDateTime.now(ARGENTINA_ZONE).toLocalDateTime();
         System.out.println(">>> ⏰ Iniciando limpieza de publicidades expiradas a las: " + now);
 

@@ -88,6 +88,10 @@ public class Usuario implements UserDetails {
     //@Column(nullable=true, columnDefinition = "integer default 0")
     //private Integer puntos;
 
+
+    @Column(name = "is_deleted")
+    private boolean isDeleted = Boolean.FALSE;
+
     @Enumerated(EnumType.STRING)
     Role role;
 

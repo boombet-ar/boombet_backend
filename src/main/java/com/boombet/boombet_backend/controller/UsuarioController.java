@@ -119,10 +119,23 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-
         UsuarioDTO.UsuarioResponse response = usuarioService.obtenerDatosDeUsuario(usuario);
 
         return ResponseEntity.ok(response);
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<String> eliminarCuenta(@AuthenticationPrincipal Usuario usuario) {
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no autenticado");
+        }
+
+        try {
+            usuarioService.desafiliar(usuario.getId());
+            return ResponseEntity.ok("Cuenta eliminada exitosamente.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al eliminar la cuenta: " + e.getMessage());
+        }
+    }
 }

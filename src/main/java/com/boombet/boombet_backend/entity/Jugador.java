@@ -58,4 +58,6 @@ public class Jugador {
 
     private String cp;
 
+    @Column(name = "is_deleted")
+    private boolean isDeleted = Boolean.FALSE;
 }
