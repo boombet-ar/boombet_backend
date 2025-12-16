@@ -1,6 +1,7 @@
 package com.boombet.boombet_backend.controller;
 
 import com.boombet.boombet_backend.entity.Usuario;
+import com.boombet.boombet_backend.service.BondaAffiliateService;
 import com.boombet.boombet_backend.service.BondaCouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import java.util.Map;
 public class BondaCouponController {
 
     private final BondaCouponService bondaCouponService;
+    private final BondaAffiliateService bondaAffiliateService;
 
     /**
      * Endpoint para obtener el listado de cupones.
@@ -65,13 +67,19 @@ public class BondaCouponController {
     public ResponseEntity<Map<String, Object>> solicitarCodigoCupon(
             @AuthenticationPrincipal Usuario usuario,
             @PathVariable("id") String id,
-            @RequestBody(required = false) Map<String, String> body
+            // CAMBIO AQUÍ: De String a Object
+            @RequestBody(required = false) Map<String, Object> body
     ) {
         if (usuario == null || usuario.getId() == null) {
             return ResponseEntity.status(401).build();
         }
 
-        String externalId = (body != null) ? body.get("external_id") : null;
+        String externalId = null;
+
+        if (body != null && body.containsKey("external_id")) {
+            Object extIdObj = body.get("external_id");
+            externalId = (extIdObj != null) ? String.valueOf(extIdObj) : null;
+        }
 
         if (externalId == null || externalId.isEmpty()) {
             externalId = String.valueOf(usuario.getId());
@@ -87,7 +95,6 @@ public class BondaCouponController {
      * GET /api/cupones/recibidos
      */
     @GetMapping("/recibidos")
-
     public ResponseEntity<Map<String, Object>> verHistorialCupones(@AuthenticationPrincipal Usuario usuario) {
         if (usuario == null || usuario.getId() == null) {
             return ResponseEntity.status(401).build();
@@ -96,5 +103,21 @@ public class BondaCouponController {
         Map<String, Object> respuesta = bondaCouponService.obtenerHistorialCupones(usuario.getId());
 
         return ResponseEntity.ok(respuesta);
+    }
+
+    @PostMapping("/afiliado")
+    public ResponseEntity<?> crearAfiliado(@AuthenticationPrincipal Usuario usuario) {
+        try {
+            bondaAffiliateService.crearAfiliado(usuario.getId());
+            return ResponseEntity.ok().body("{\"message\": \"Afiliado creado y sincronizado con Bonda exitosamente.\"}");
+
+        } catch (IllegalArgumentException e) {
+            // Error si no encuentra al usuario (404 Not Found)
+            return ResponseEntity.status(404).body("{\"error\": \"" + e.getMessage() + "\"}");
+
+        } catch (RuntimeException e) {
+            // Error al conectar con Bonda u otro error interno (500 Internal Server Error)
+            return ResponseEntity.status(500).body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
     }
 }
