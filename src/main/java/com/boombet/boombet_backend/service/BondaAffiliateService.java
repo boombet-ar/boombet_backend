@@ -40,7 +40,7 @@ public class BondaAffiliateService {
 
         try {
             restClient.post()
-                    .uri("/microsite/" + micrositeId + "/affiliates")
+                    .uri("api/v2/microsite/" + micrositeId + "/affiliates")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(requestBody)
                     .retrieve()
@@ -63,7 +63,7 @@ public class BondaAffiliateService {
 
         try {
             restClient.delete()
-                    .uri("/microsite/" + micrositeId + "/affiliates/" + code)
+                    .uri("api/v2/microsite/" + micrositeId + "/affiliates/" + code)
                     .retrieve()
                     .toBodilessEntity();
 
@@ -87,7 +87,7 @@ public class BondaAffiliateService {
         try {
             // GET /api/v2/microsite/{microsite_id}/affiliates/{code}
             return restClient.get()
-                    .uri("/microsite/" + micrositeId + "/affiliates/" + code)
+                    .uri("api/v2/microsite/" + micrositeId + "/affiliates/" + code)
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
 
