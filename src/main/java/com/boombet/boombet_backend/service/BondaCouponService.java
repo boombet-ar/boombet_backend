@@ -42,9 +42,10 @@ public class BondaCouponService {
     public Map<String, Object> obtenerCupones(Long idUsuario, Integer page, String orderBy) {
         int pageNum = (page != null && page > 0) ? page : 1;
         String sortOrder = (orderBy != null && !orderBy.isEmpty()) ? orderBy : "relevant";
-        // String codigoAfiliado = String.valueOf(idUsuario);
-        String codigoAfiliado = "123456";
+        String codigoAfiliado = String.valueOf(idUsuario);
+        // String codigoAfiliado = "123456";
 
+        System.out.println("codigoAfiliado: " + codigoAfiliado);
         try {
             Map<String, Object> response = restClient.get()
                     .uri(uriBuilder -> uriBuilder
@@ -86,8 +87,8 @@ public class BondaCouponService {
      * @return Map con la respuesta JSON de la API.
      */
     public Map<String, Object> obtenerCuponPorId(Long idUsuario, String idCupon) {
-        // String codigoAfiliado = String.valueOf(idUsuario);
-        String codigoAfiliado = "123456";
+        String codigoAfiliado = String.valueOf(idUsuario);
+        //String codigoAfiliado = "123456";
 
         try {
             Map<String, Object> cupon = restClient.get()
@@ -134,10 +135,10 @@ public class BondaCouponService {
 
         // 2. Obtener el cupón para saber su PRECIO
         // Reutilizamos tu método obtenerCuponPorId que ya calcula el precio usando CuponesUtils
-        Map<String, Object> cuponDetalle = obtenerCuponPorId(idUsuario, idCupon);
+        //Map<String, Object> cuponDetalle = obtenerCuponPorId(idUsuario, idCupon);
 
         // Asumimos que "precio_puntos" existe porque obtenerCuponPorId lo inyecta
-        Integer precio = (Integer) cuponDetalle.getOrDefault("precio_puntos", 1000);
+        //Integer precio = (Integer) cuponDetalle.getOrDefault("precio_puntos", 1000);
 
         /*
         // 3. Validar saldo
@@ -154,7 +155,8 @@ public class BondaCouponService {
         Por ahora no usamos el sistema de puntos
         */
         // --- LÓGICA DE BONDA ---
-        String codigoAfiliado = "123456"; // O String.valueOf(idUsuario) en prod
+        //String codigoAfiliado = "123456"; // O
+        String codigoAfiliado = String.valueOf(idUsuario);
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("key", apiKey);
@@ -193,8 +195,8 @@ public class BondaCouponService {
     public Map<String, Object> obtenerHistorialCupones(Long idUsuario) {
 
         // Mantenemos el ID de prueba "123456" por consistencia con el resto del código actual.
-        // En producción cambiar por: String.valueOf(idUsuario);
-        String codigoAfiliado = "123456";
+        //String codigoAfiliado = "123456";
+        String codigoAfiliado = String.valueOf(idUsuario);
 
         try {
             return restClient.get()
