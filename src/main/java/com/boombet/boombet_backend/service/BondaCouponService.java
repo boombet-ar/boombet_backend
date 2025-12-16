@@ -193,8 +193,8 @@ public class BondaCouponService {
     public Map<String, Object> obtenerHistorialCupones(Long idUsuario) {
 
         // Mantenemos el ID de prueba "123456" por consistencia con el resto del código actual.
-        // En producción cambiar por: String.valueOf(idUsuario);
-        String codigoAfiliado = "123456";
+        String codigoAfiliado = String.valueOf(idUsuario);
+        //String codigoAfiliado = "123456";
 
         try {
             return restClient.get()
