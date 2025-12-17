@@ -139,7 +139,7 @@ public class BondaCouponController {
             }
 
             return ResponseEntity.ok(datosAfiliado);
-
+        //
         } catch (Exception e) {
             // Manejo de errores inesperados
             return ResponseEntity.internalServerError()
