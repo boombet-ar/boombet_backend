@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -30,13 +31,15 @@ public class BondaCouponController {
     public ResponseEntity<Map<String, Object>> listarCupones(
             @AuthenticationPrincipal Usuario usuario,
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "relevant") String orderBy
+            @RequestParam(defaultValue = "relevant") String orderBy,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) Integer categoria
     ) {
         if (usuario == null || usuario.getId() == null) {
             return ResponseEntity.status(401).build();
         }
 
-        Map<String, Object> respuesta = bondaCouponService.obtenerCupones(usuario.getId(), page, orderBy);
+        Map<String, Object> respuesta = bondaCouponService.obtenerCupones(usuario.getId(), page, orderBy, query, categoria);
 
         return ResponseEntity.ok(respuesta);
     }
@@ -119,5 +122,39 @@ public class BondaCouponController {
             // Error al conectar con Bonda u otro error interno (500 Internal Server Error)
             return ResponseEntity.status(500).body("{\"error\": \"" + e.getMessage() + "\"}");
         }
+    }
+
+    @GetMapping("/afiliado")
+    public ResponseEntity<Map<String, Object>> obtenerEstadoAfiliado(@AuthenticationPrincipal Usuario usuario) {
+        if (usuario == null || usuario.getId() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        try {
+            Map<String, Object> datosAfiliado = bondaAffiliateService.obtenerAfiliado(usuario.getId());
+
+            if (datosAfiliado == null) {
+                // Si el servicio devuelve null (404 en Bonda), respondemos con 404 al front
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok(datosAfiliado);
+
+        } catch (Exception e) {
+            // Manejo de errores inesperados
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Error consultando estado de afiliación: " + e.getMessage()));
+        }
+    }
+
+
+    @GetMapping("/categorias")
+    public ResponseEntity<List<Map<String, Object>>> listarCategorias(@AuthenticationPrincipal Usuario usuario) {
+        if (usuario == null || usuario.getId() == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        List<Map<String, Object>> categorias = bondaCouponService.obtenerCategorias(usuario.getId());
+        return ResponseEntity.ok(categorias);
     }
 }
