@@ -12,6 +12,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -39,37 +40,47 @@ public class BondaCouponService {
      * @param orderBy   Ordenamiento: "relevant", "ownRelevant", "latest". (Puede ser null).
      * @return Map con la respuesta JSON de la API.
      */
-    public Map<String, Object> obtenerCupones(Long idUsuario, Integer page, String orderBy) {
+    public Map<String, Object> obtenerCupones(Long idUsuario, Integer page, String orderBy, String query, Integer categoria) {
         int pageNum = (page != null && page > 0) ? page : 1;
         String sortOrder = (orderBy != null && !orderBy.isEmpty()) ? orderBy : "relevant";
         String codigoAfiliado = String.valueOf(idUsuario);
-        // String codigoAfiliado = "123456";
 
-        System.out.println("codigoAfiliado: " + codigoAfiliado);
         try {
             Map<String, Object> response = restClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path("/api/cupones")
-                            .queryParam("key", apiKey)
-                            .queryParam("micrositio_id", micrositeId)
-                            .queryParam("codigo_afiliado", codigoAfiliado)
-                            .queryParam("page", pageNum)
-                            .queryParam("subcategories", false)
-                            .queryParam("with_locations", false)
-                            .queryParam("orderBy", sortOrder)
-                            .build())
+                    .uri(uriBuilder -> {
+                        var builder = uriBuilder
+                                .path("/api/cupones")
+                                .queryParam("key", apiKey)
+                                .queryParam("micrositio_id", micrositeId)
+                                .queryParam("codigo_afiliado", codigoAfiliado)
+                                .queryParam("page", pageNum)
+                                .queryParam("subcategories", false) // O true, según prefieras
+                                .queryParam("with_locations", false)
+                                .queryParam("orderBy", sortOrder);
+
+                        if (query != null && !query.isEmpty()) {
+                            builder.queryParam("query", query);
+                        }
+
+                        if (categoria != null && categoria > 0) {
+                            builder.queryParam("categoria", categoria);
+                        }
+
+                        return builder.build();
+                    })
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {});
 
-            // Lógica delegada a Utils. Buscamos en "results" como vimos en el JSON.
+            /* Lógica de inyección de precios
             if (response != null && response.containsKey("results")) {
                 Object resultsObj = response.get("results");
                 if (resultsObj instanceof List) {
                     List<Map<String, Object>> cupones = (List<Map<String, Object>>) resultsObj;
-                    // Usamos referencia al método estático de la utilidad
                     cupones.forEach(CuponesUtils::injectarPrecioPuntos);
                 }
             }
+            */
+
 
             return response;
 
@@ -216,4 +227,26 @@ public class BondaCouponService {
     }
 
 
+    public List<Map<String, Object>> obtenerCategorias(Long idUsuario) {
+        String codigoAfiliado = String.valueOf(idUsuario);
+
+        try {
+            List<Map<String, Object>> response = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/categorias")
+                            .queryParam("key", apiKey)
+                            .queryParam("micrositio_id", micrositeId)
+                            .queryParam("codigo_afiliado", codigoAfiliado)
+                            .queryParam("subcategories", false)
+                            .build())
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+
+            return response != null ? response : Collections.emptyList();
+
+        } catch (Exception e) {
+            System.err.println(">>> ❌ Error obteniendo categorías de Bonda: " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
 }

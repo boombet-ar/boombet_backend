@@ -39,17 +39,22 @@ public class BondaAffiliateService {
         Map<String, String> requestBody = Collections.singletonMap("code", code);
 
         try {
-            restClient.post()
+            // CAMBIO: En lugar de toBodilessEntity(), leemos el String para ver qué dice Bonda
+            String responseBody = restClient.post()
                     .uri("api/v2/microsite/" + micrositeId + "/affiliates")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(requestBody)
                     .retrieve()
-                    .toBodilessEntity();
+                    .body(String.class);
 
-            System.out.println(">>> ✅ Afiliado creado en Bonda. Code: " + code);
+            System.out.println(">>> 📡 Respuesta RAW de Bonda: " + responseBody);
+            System.out.println(">>> ✅ Afiliado procesado en Bonda. Code: " + code);
 
         } catch (Exception e) {
             System.err.println(">>> ❌ Error creando afiliado en Bonda: " + e.getMessage());
+            if (e instanceof org.springframework.web.client.RestClientResponseException re) {
+                System.err.println(">>> 📦 Cuerpo del error: " + re.getResponseBodyAsString());
+            }
             throw new RuntimeException("Error al sincronizar con Bonda: " + e.getMessage());
         }
     }
