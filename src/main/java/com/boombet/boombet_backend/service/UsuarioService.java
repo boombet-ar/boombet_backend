@@ -98,6 +98,9 @@ public class UsuarioService {
 
         UsuarioUtils.validarFormatoPassword(userData.getPassword());
 
+        if(usuarioRepository.existsByUsername(userData.getUser())){
+            throw new IllegalArgumentException("Ya existe un usuario con ese nombre");
+        }
 
         String hashedPass = passwordEncoder.encode(userData.getPassword());
 
@@ -162,6 +165,9 @@ public class UsuarioService {
                 System.err.println("Afiliación fallida: No hay provincia en los datos.");
                 return;
             }
+
+
+
 
             String query = "SELECT alias FROM provincias WHERE nombre = ?";
             String provinciaAlias;

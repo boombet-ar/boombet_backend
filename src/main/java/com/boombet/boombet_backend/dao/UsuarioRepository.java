@@ -21,4 +21,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByResetToken(String resetToken);
     Optional<Usuario> findByDni(String dni);
 
+    boolean existsByUsername(String username);
+
 }

@@ -42,3 +42,19 @@ jobs:
             ${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # 5. Iniciar sesión en Azure (Necesitas crear el secreto AZURE_CREDENTIALS en GitHub)
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 6. Ordenar a Container Apps que use la nueva imagen
+      - name: Deploy to Container App
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }}
+          acrName: boombetbackend  # El nombre de tu Registry (sin .azurecr.io)
+          containerAppName: boombet-backend # El nombre de tu App en Azure
+          resourceGroup: boombet-rg # Reemplaza con tu Resource Group real
+          imageToDeploy: ${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}

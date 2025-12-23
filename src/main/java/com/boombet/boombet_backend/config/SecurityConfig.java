@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/users/auth/**").permitAll() //libera los endpoints de autenticacion
                         .requestMatchers("/error").permitAll() //libera los endpoints de error
+                        .requestMatchers("/api/publicaciones").permitAll() //libera los endpoints de error. SOLO PARA TEST!!!. eliminar esta linea en prod.
                         .requestMatchers("/api/webhooks/notify-socket").permitAll()
                         .requestMatchers("/affiliation/**").permitAll()
                         .requestMatchers(
