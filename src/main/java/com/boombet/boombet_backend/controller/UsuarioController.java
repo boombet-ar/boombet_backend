@@ -138,4 +138,10 @@ public class UsuarioController {
                     .body("Error al eliminar la cuenta: " + e.getMessage());
         }
     }
+
+    @GetMapping("/isVerified")
+    public ResponseEntity<Boolean> isVerified(@AuthenticationPrincipal Usuario usuario) {
+        Boolean isVerified = usuario.isVerified();
+        return ResponseEntity.ok(isVerified);
+    }
 }
