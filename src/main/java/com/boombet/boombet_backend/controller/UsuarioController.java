@@ -1,4 +1,5 @@
 package com.boombet.boombet_backend.controller;
+import com.boombet.boombet_backend.dao.UsuarioRepository;
 import com.boombet.boombet_backend.dto.*;
 
 import com.boombet.boombet_backend.entity.Usuario;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -19,10 +21,12 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private DatadashService datadashService;
+    private final UsuarioRepository usuarioRepository;
 
-    public UsuarioController(UsuarioService usuarioService, DatadashService datadashService) {
+    public UsuarioController(UsuarioService usuarioService, DatadashService datadashService, UsuarioRepository usuarioRepository) {
         this.usuarioService = usuarioService;
         this.datadashService = datadashService;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @PostMapping("/auth/register")
@@ -140,7 +144,11 @@ public class UsuarioController {
     }
 
     @GetMapping("/isVerified")
-    public ResponseEntity<Boolean> isVerified(@AuthenticationPrincipal Usuario usuario) {
+    public ResponseEntity<Boolean> isVerified(@RequestParam String email) {
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("No se encontró el usuario con email: " + email));
+
         Boolean isVerified = usuario.isVerified();
         return ResponseEntity.ok(isVerified);
     }
