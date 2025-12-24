@@ -143,7 +143,7 @@ public class UsuarioController {
         }
     }
 
-    @GetMapping("/isVerified")
+    @GetMapping("/auth/isVerified")
     public ResponseEntity<Boolean> isVerified(@RequestParam String email) {
 
         Usuario usuario = usuarioRepository.findByEmail(email)
