@@ -99,6 +99,8 @@ public class Usuario implements UserDetails {
     @Column(nullable=false)
     private String username;
 
+    @Column(name="bonda_enabled", nullable = false)
+    private Boolean bondaEnabled = false;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_jugador", referencedColumnName = "id")
