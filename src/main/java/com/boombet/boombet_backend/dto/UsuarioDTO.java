@@ -10,6 +10,8 @@ public class UsuarioDTO {
         //Integer puntos,
         String email,
         @JsonProperty("bonda_enabled")
-        Boolean bondaEnabled
+        Boolean bondaEnabled,
+        @JsonProperty("is_deleted")
+        Boolean isDeleted
     ){}
 }
