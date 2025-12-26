@@ -48,6 +48,7 @@ public class BondaAffiliateService {
                     .body(String.class);
 
             usuario.setBondaEnabled(true);
+            usuarioRepository.save(usuario);
             System.out.println(">>> 📡 Respuesta RAW de Bonda: " + responseBody);
             System.out.println(">>> ✅ Afiliado procesado en Bonda. Code: " + code);
 
