@@ -94,7 +94,7 @@ public class PublicacionService {
     }
 
     public Page<PublicacionResponseDTO> verPublicacionesPorUsuario(Long userId, Pageable pageable) {
-        Page<Publicacion> pagina = publicacionRepository.findByParent_Id(userId, pageable);
+        Page<Publicacion> pagina = publicacionRepository.findByUsuario_Id(userId, pageable);
         return pagina.map(this::mapToDTO);
     }
 }
