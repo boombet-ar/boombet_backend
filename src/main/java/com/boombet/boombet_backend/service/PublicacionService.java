@@ -92,4 +92,9 @@ public class PublicacionService {
 
         publicacionRepository.delete(publicacion);
     }
+
+    public Page<PublicacionResponseDTO> verPublicacionesPorUsuario(Long userId, Pageable pageable) {
+        Page<Publicacion> pagina = publicacionRepository.findByParent_Id(userId, pageable);
+        return pagina.map(this::mapToDTO);
+    }
 }

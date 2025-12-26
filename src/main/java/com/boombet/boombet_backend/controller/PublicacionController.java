@@ -89,4 +89,13 @@ public class PublicacionController {
         return ResponseEntity.ok().build();
     }
 
+
+    @GetMapping("/me")
+    public ResponseEntity<Page<PublicacionResponseDTO>> verMisPublicaciones(
+            @AuthenticationPrincipal Usuario usuario,
+            @PageableDefault(size = 20, page = 0) Pageable pageable
+    ) {
+        Page<PublicacionResponseDTO> respuestas = publicacionService.verPublicacionesPorUsuario(usuario.getId(), pageable);
+        return ResponseEntity.ok(respuestas);
+    }
 }

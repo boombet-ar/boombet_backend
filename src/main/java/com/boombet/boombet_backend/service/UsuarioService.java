@@ -299,7 +299,9 @@ public class UsuarioService {
                 usuario.getDni(),
                 //usuario.getPuntos(),
                 usuario.getEmail(),
-                usuario.getBondaEnabled()
+                usuario.isBondaEnabled(),
+                usuario.isDeleted()
+
         );
     }
 
