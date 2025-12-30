@@ -51,12 +51,15 @@ public class PublicacionService {
 
     public PublicacionResponseDTO mapToDTO(Publicacion publicacion) {
 
+        Usuario usuario = publicacion.getUsuario();
+
         return PublicacionResponseDTO.builder()
                 .id(publicacion.getId())
                 .content(publicacion.getContent())
                 .parentId(publicacion.getParent() != null ? publicacion.getParent().getId() : null)
                 .username(publicacion.getUsuario().getUsername())
                 .createdAt(publicacion.getCreatedAt())
+                .userIconUrl(usuario.getIconUrl())
                 .build();
     }
 
