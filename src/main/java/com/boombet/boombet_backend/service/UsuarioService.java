@@ -24,10 +24,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class UsuarioService {
@@ -358,5 +355,18 @@ public class UsuarioService {
         }
     }
 
+
+    public List<CasinoDTO.casinosList> listarCasinosAfiliados(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (usuario.getJugador() == null) {
+            throw new RuntimeException("El usuario no tiene un perfil de jugador asociado");
+        }
+
+        Long idJugador = usuario.getJugador().getId();
+
+        return jugadorRepository.encontrarCasinosDelJugador(idJugador);
+    }
 
 }
