@@ -89,6 +89,9 @@ public class Usuario implements UserDetails {
     //private Integer puntos;
 
 
+    @Column(name = "icon_url")
+    private String iconUrl;
+
     @Column(name = "is_deleted")
     private boolean isDeleted = Boolean.FALSE;
 

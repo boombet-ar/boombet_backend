@@ -10,8 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -151,5 +153,30 @@ public class UsuarioController {
 
         Boolean isVerified = usuario.isVerified();
         return ResponseEntity.ok(isVerified);
+    }
+
+    @PostMapping("set_icon")
+    public ResponseEntity<Map<String, String>> setIcon(@AuthenticationPrincipal Usuario usuario,
+                                                       @RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("error", "El archivo está vacío"));
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("error", "El archivo debe ser una imagen"));
+        }
+
+        try {
+            String url = usuarioService.cambiarIcono(usuario.getId(), file);
+            return ResponseEntity.ok(Collections.singletonMap("url", url));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Error interno: " + e.getMessage()));
+        }
     }
 }

@@ -21,7 +21,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +47,7 @@ public class UsuarioService {
     @Lazy
     private UsuarioService self;
 
+    private final AzureBlobService azureBlobService;
     private final EmailService emailService;
     private final JdbcTemplate jdbcTemplate;
     private final JwtService jwtService;
@@ -65,7 +68,9 @@ public class UsuarioService {
             JugadorService jugadorService,
             WebSocketService websocketService,
             @Qualifier("affiliatorRestClient") RestClient restClient,
-            EmailService emailService, JugadorRepository jugadorRepository
+            EmailService emailService,
+            JugadorRepository jugadorRepository,
+            AzureBlobService azureBlobService
     ) {
         this.jugadorService = jugadorService;
         this.jdbcTemplate = jdbcTemplate;
@@ -77,6 +82,7 @@ public class UsuarioService {
         this.websocketService = websocketService;
         this.emailService = emailService;
         this.jugadorRepository = jugadorRepository;
+        this.azureBlobService = azureBlobService;
     }
 
 
@@ -306,7 +312,7 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void desafiliar(Long idUsuario){ //podría ser un soft delete?
+    public void desafiliar(Long idUsuario){ //soft delete
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario"));
 
@@ -317,6 +323,36 @@ public class UsuarioService {
             usuarioRepository.delete(usuario);
             jugadorRepository.delete(jugador);
         }catch(Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
+
+
+    @Value("${spring.cloud.azure.storage.blob.container-name_iconos}")
+    private String iconsContainer;
+
+    @Transactional
+    public String cambiarIcono(Long idUsuario, MultipartFile file){
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario"));
+
+        if(usuario.getIconUrl() != null){
+            try {
+                azureBlobService.deleteBlob(usuario.getIconUrl(), iconsContainer);
+            }catch(Exception e){
+                System.err.println("Error al eliminar la imagen anterior" + e.getMessage());
+            }
+        }
+
+        try {
+            String blobUrl = azureBlobService.uploadFile(file, iconsContainer);
+
+
+            usuario.setIconUrl(blobUrl);
+            usuarioRepository.save(usuario);
+            return blobUrl;
+        } catch(RuntimeException e) {
             throw new RuntimeException(e);
         }
     }
