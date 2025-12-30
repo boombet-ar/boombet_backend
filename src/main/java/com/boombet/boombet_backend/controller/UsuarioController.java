@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -178,5 +179,11 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("error", "Error interno: " + e.getMessage()));
         }
+    }
+
+
+    @GetMapping("/casinos_afiliados")
+    public ResponseEntity<List<CasinoDTO.casinosList>> listarCasinos(@AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(usuarioService.listarCasinosAfiliados(usuario.getId()));
     }
 }
