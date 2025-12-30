@@ -23,7 +23,8 @@ public class PublicacionDTO {
             String content,
             Long parentId,
             String username,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            String userIconUrl
 
     ){}
 }
