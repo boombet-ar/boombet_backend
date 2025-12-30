@@ -306,7 +306,8 @@ public class UsuarioService {
                 //usuario.getPuntos(),
                 usuario.getEmail(),
                 usuario.isBondaEnabled(),
-                usuario.isDeleted()
+                usuario.isDeleted(),
+                usuario.getIconUrl()
 
         );
     }

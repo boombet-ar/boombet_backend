@@ -12,6 +12,8 @@ public class UsuarioDTO {
         @JsonProperty("bonda_enabled")
         Boolean bondaEnabled,
         @JsonProperty("is_deleted")
-        Boolean isDeleted
+        Boolean isDeleted,
+        @JsonProperty("icon_url")
+        String iconUrl
     ){}
 }
