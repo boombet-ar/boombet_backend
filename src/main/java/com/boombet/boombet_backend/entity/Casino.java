@@ -32,7 +32,4 @@ public class Casino {
     @Column(name="provincia_id")
     private Long provinciaId;
 
-    @Column(name="logo_url")
-    private String logoUrl;
-
 }
