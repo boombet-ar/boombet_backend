@@ -21,15 +21,14 @@ public interface JugadorRepository extends JpaRepository<Jugador, Long> {
     Optional<Jugador> findByDni(String dni);
 
     @Query(value = """
-
-            SELECT 
-            cg.nombre_gral AS nombreGral,
-            c.url AS url,
-            c.logo_url AS logoUrl
-        FROM afiliaciones a
-        INNER JOIN casinos c ON a.id_casino = c.id
-        INNER JOIN casino_general cg ON c.casino_gral_id = cg.id
-        WHERE a.id_jugador = :idJugador
-        """, nativeQuery = true)
+    SELECT 
+        cg.nombre_gral AS nombreGral,
+        c.url AS url,
+        cg.logo_url AS logoUrl   
+    FROM afiliaciones a
+    INNER JOIN casinos c ON a.id_casino = c.id
+    INNER JOIN casino_general cg ON c.casino_gral_id = cg.id
+    WHERE a.id_jugador = :idJugador
+    """, nativeQuery = true)
     List<CasinoDTO.casinosList> encontrarCasinosDelJugador(@Param("idJugador") Long idJugador);
 }
