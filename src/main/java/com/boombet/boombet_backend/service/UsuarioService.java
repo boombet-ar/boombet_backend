@@ -242,6 +242,13 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByUsernameOrEmail(request.getIdentifier(), request.getIdentifier())
                 .orElseThrow();
 
+        String fcmToken = null;
+        if (request.getFcmToken() != null && !request.getFcmToken().isEmpty()) {
+            fcmToken = request.getFcmToken();
+            usuario.setFcmToken(fcmToken);
+            usuarioRepository.save(usuario);
+        }
+
         if (!usuario.isVerified()) {
             throw new RuntimeException("Usuario no verificado");
         }
@@ -250,6 +257,7 @@ public class UsuarioService {
 
         return AuthResponseDTO.builder()
                 .token(token)
+                .fcmToken(fcmToken)
                 .build();
     }
 

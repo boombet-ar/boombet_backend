@@ -88,6 +88,8 @@ public class Usuario implements UserDetails {
     //@Column(nullable=true, columnDefinition = "integer default 0")
     //private Integer puntos;
 
+    @Column(name="fcm_token")
+    private String fcmToken;
 
     @Column(name = "icon_url")
     private String iconUrl;

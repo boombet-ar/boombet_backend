@@ -1,6 +1,7 @@
 package com.boombet.boombet_backend.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,4 +14,6 @@ import lombok.NoArgsConstructor;
 public class AuthResponseDTO {
     private String token;
     private Object playerData;
+    @JsonProperty("fcm_token")
+    private String fcmToken;
 }
