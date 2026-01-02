@@ -16,10 +16,10 @@ public class FCMService {
     private UsuarioRepository usuarioRepository;
 
     // Método principal: Enviar notificación buscando al usuario por ID
-    public void sendNotificationToUser(NotificacionRequestDTO request) throws Exception {
+    public void sendNotificationToUser(NotificacionRequestDTO request, Long userId) throws Exception {
 
-        Usuario usuario = usuarioRepository.findById(request.userId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + request.userId()));
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + userId));
 
         if (usuario.getFcmToken() == null || usuario.getFcmToken().isEmpty()) {
             throw new RuntimeException("El usuario " + usuario.getId() + " no tiene un dispositivo vinculado (Token NULL).");
