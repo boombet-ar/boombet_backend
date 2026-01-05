@@ -36,4 +36,4 @@ env.properties
 docker-compose.yaml
 
 .env
-
+init.sql

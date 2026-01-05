@@ -22,6 +22,7 @@ public class FCMService {
         Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + userId));
 
+        System.out.println("DEBUG USUARIO ID: " + usuario.getId());
 
         if (usuario.getFcmToken() == null || usuario.getFcmToken().isEmpty()) {
             throw new RuntimeException("El usuario " + usuario.getId() + " no tiene un dispositivo vinculado (Token NULL).");
@@ -39,6 +40,7 @@ public class FCMService {
         if (request.data() != null) {
             messageBuilder.putAllData(request.data());
         }
+
 
         FirebaseMessaging.getInstance().send(messageBuilder.build());
     }

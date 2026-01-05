@@ -1,5 +1,6 @@
 package com.boombet.boombet_backend.service;
 
+import com.boombet.boombet_backend.controller.FCMController;
 import com.boombet.boombet_backend.dao.JugadorRepository;
 import com.boombet.boombet_backend.dao.UsuarioRepository;
 import com.boombet.boombet_backend.dto.*;
@@ -44,6 +45,8 @@ public class UsuarioService {
     @Lazy
     private UsuarioService self;
 
+    private final FCMService fcmService;
+    private final JugadorRepository jugadorRepository;
     private final AzureBlobService azureBlobService;
     private final EmailService emailService;
     private final JdbcTemplate jdbcTemplate;
@@ -51,7 +54,6 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository usuarioRepository;
     private final AuthenticationManager authenticationManager;
-    private final JugadorRepository jugadorRepository;
     private final RestClient restClient;
     private final JugadorService jugadorService;
     private final WebSocketService websocketService;
@@ -68,7 +70,8 @@ public class UsuarioService {
             @Qualifier("affiliatorRestClient") RestClient restClient,
             EmailService emailService,
             JugadorRepository jugadorRepository,
-            AzureBlobService azureBlobService
+            AzureBlobService azureBlobService,
+            FCMService fcmService
 
     ) {
         this.jugadorService = jugadorService;
@@ -82,6 +85,7 @@ public class UsuarioService {
         this.emailService = emailService;
         this.jugadorRepository = jugadorRepository;
         this.azureBlobService = azureBlobService;
+        this.fcmService = fcmService;
     }
 
 
@@ -198,6 +202,8 @@ public class UsuarioService {
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {
                     });
+
+
             System.out.println("---- RESPUESTA RECIBIDA, NOTIFICANDO WEBSOCKET ----");
             WebsocketDTO notificacion = new WebsocketDTO();
             notificacion.setWebsocketLink(websocketLink); // Para que el servicio extraiga el ID
@@ -218,8 +224,26 @@ public class UsuarioService {
                     notificacion.setResponses(new HashMap<>());
                 }
             }
-
             websocketService.sendToWebSocket(notificacion);
+
+            respuestaApi.put("deeplink", "boombet://affiliation/completed");
+            NotificacionDTO.NotificacionRequestDTO notifBody = NotificacionDTO.NotificacionRequestDTO.builder()
+                    .title("Afiliacion completada!")
+                    .body("Revisa el estado de tus afiliaciones")
+                    .data(respuestaApi)
+                    .build();
+
+            System.out.println(respuestaApi);
+            usuarioRepository.findByEmail(datosAfiliacion.getEmail()).ifPresent(u -> {
+                try {
+                    System.out.println("Usuario encontrado con id: " + u.getId());
+                    fcmService.sendNotificationToUser(notifBody, u.getId());
+                } catch (Exception e) {
+                    System.out.println("Usuario no encontrado");
+                    e.printStackTrace();
+                }
+            });
+
             System.out.println("---- AFILIACIÓN COMPLETADA EXITOSAMENTE (" + provinciaAlias + ") ----");
         } catch (Exception e) {
             System.err.println("Error en afiliación: " + e.getMessage());

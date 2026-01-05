@@ -44,7 +44,7 @@ public class FCMController {
 
 
 
-    @Operation(summary = "Guardar Token FCM", description = "Actualiza el token de Firebase del usuario para notificaciones push." +
+    @Operation(summary = "Guardar Token FCM", description = "Actualiza el token de Firebase del usuario para notificaciones push. " +
             "BODY: { \"token\":\"token fcm\"}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Token guardado exitosamente"),
@@ -57,4 +57,6 @@ public class FCMController {
         usuarioRepository.save(usuario);
         return ResponseEntity.ok().build();
     }
+
+
 }
