@@ -33,10 +33,10 @@ public class UsuarioController {
     }
 
     @PostMapping("/auth/register")
-    public ResponseEntity<Void> register(@Valid @RequestBody RegistroRequestDTO credsUsuario) {
+    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegistroRequestDTO credsUsuario) {
         try {
-            usuarioService.register(credsUsuario);
-            return ResponseEntity.ok().build();
+            AuthResponseDTO response = usuarioService.register(credsUsuario);
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }

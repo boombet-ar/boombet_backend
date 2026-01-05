@@ -18,14 +18,15 @@ public class FCMService {
     // Método principal: Enviar notificación buscando al usuario por ID
     public void sendNotificationToUser(NotificacionRequestDTO request, Long userId) throws Exception {
 
+
         Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + userId));
+
 
         if (usuario.getFcmToken() == null || usuario.getFcmToken().isEmpty()) {
             throw new RuntimeException("El usuario " + usuario.getId() + " no tiene un dispositivo vinculado (Token NULL).");
         }
 
-        // 3. Construimos la notificación visual
         Notification notification = Notification.builder()
                 .setTitle(request.title())
                 .setBody(request.body())
@@ -35,12 +36,10 @@ public class FCMService {
                 .setToken(usuario.getFcmToken())
                 .setNotification(notification);
 
-        // Agregamos datos extra si vienen
         if (request.data() != null) {
             messageBuilder.putAllData(request.data());
         }
 
-        // 5. Enviamos
         FirebaseMessaging.getInstance().send(messageBuilder.build());
     }
 }

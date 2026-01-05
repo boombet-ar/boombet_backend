@@ -56,6 +56,7 @@ public class UsuarioService {
     private final JugadorService jugadorService;
     private final WebSocketService websocketService;
 
+
     public UsuarioService(
             JdbcTemplate jdbcTemplate,
             JwtService jwtService,
@@ -68,6 +69,7 @@ public class UsuarioService {
             EmailService emailService,
             JugadorRepository jugadorRepository,
             AzureBlobService azureBlobService
+
     ) {
         this.jugadorService = jugadorService;
         this.jdbcTemplate = jdbcTemplate;
@@ -85,7 +87,7 @@ public class UsuarioService {
 
 
     @Transactional
-    public void register(RegistroRequestDTO inputWrapper) {
+    public AuthResponseDTO register(RegistroRequestDTO inputWrapper) {
         /*
          * Hashea la contraseña
          * Hace la solicitud a datadash y recibe datos del usuario
@@ -152,8 +154,13 @@ public class UsuarioService {
                 htmlBody
         );
 
-        //Solo devuelve un 200 si funcionó.
 
+        String token = jwtService.getToken(nuevoUsuario);
+
+        return AuthResponseDTO.builder()
+                .token(token)
+                .playerData(userData)
+                .build();
     }
 
     @Async
@@ -332,7 +339,6 @@ public class UsuarioService {
             throw new RuntimeException(e);
         }
     }
-
 
 
     @Value("${spring.cloud.azure.storage.blob.container-name_iconos}")
