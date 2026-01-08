@@ -25,6 +25,11 @@ public class DatadashService {
     }
 
 
+    /**
+     * Devuelve los datos del usuario extraídos de la api de datadash. Se utiliza previo al registro
+     * @param input Son basicamente los datos de registro
+     * @return
+     */
     public DatadashDTO.DatadashInformResponse getUserData(UserDataRequestDTO input) {
 
         String cuil = UsuarioUtils.generarCuit(input);

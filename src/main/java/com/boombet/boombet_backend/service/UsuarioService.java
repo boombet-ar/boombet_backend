@@ -8,6 +8,7 @@ import com.boombet.boombet_backend.entity.Jugador;
 import com.boombet.boombet_backend.entity.Usuario;
 import com.boombet.boombet_backend.utils.UsuarioUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -44,7 +45,7 @@ public class UsuarioService {
     @Autowired
     @Lazy
     private UsuarioService self;
-
+    private final ObjectMapper objectMapper;
     private final FCMService fcmService;
     private final JugadorRepository jugadorRepository;
     private final AzureBlobService azureBlobService;
@@ -60,7 +61,7 @@ public class UsuarioService {
 
 
     public UsuarioService(
-            JdbcTemplate jdbcTemplate,
+            ObjectMapper objectMapper, JdbcTemplate jdbcTemplate,
             JwtService jwtService,
             PasswordEncoder passwordEncoder,
             UsuarioRepository usuarioRepository,
@@ -74,6 +75,7 @@ public class UsuarioService {
             FCMService fcmService
 
     ) {
+        this.objectMapper = objectMapper;
         this.jugadorService = jugadorService;
         this.jdbcTemplate = jdbcTemplate;
         this.jwtService = jwtService;
@@ -183,6 +185,7 @@ public class UsuarioService {
 
 
 
+
             String query = "SELECT alias FROM provincias WHERE nombre = ?";
             String provinciaAlias;
             try {
@@ -225,25 +228,37 @@ public class UsuarioService {
                 }
             }
             websocketService.sendToWebSocket(notificacion);
-
-            respuestaApi.put("deeplink", "boombet://affiliation/completed");
-            NotificacionDTO.NotificacionRequestDTO notifBody = NotificacionDTO.NotificacionRequestDTO.builder()
-                    .title("Afiliacion completada!")
-                    .body("Revisa el estado de tus afiliaciones")
-                    .data(respuestaApi)
-                    .build();
-
-            System.out.println(respuestaApi);
-            usuarioRepository.findByEmail(datosAfiliacion.getEmail()).ifPresent(u -> {
+            usuarioRepository.findByEmail(datosAfiliacion.getEmail()).ifPresent(usuario -> {
                 try {
-                    System.out.println("Usuario encontrado con id: " + u.getId());
-                    fcmService.sendNotificationToUser(notifBody, u.getId());
+                    System.out.println("---- PREPARANDO NOTIFICACIÓN FCM ----");
+
+                    // 2. Preparamos el mapa de datos (DATA PAYLOAD)
+                    // Recordá: FCM solo acepta <String, String> en el campo 'data'
+                    Map<String, String> dataFCM = new HashMap<>();
+
+                    // A. Agregamos el Deeplink directo
+                    dataFCM.put("\"deeplink\"", "boombet://affiliation/completed");
+
+                    // Convertimos la respuesta compleja de la API a un String JSON
+                    // Esto permite que el objeto viaje "empaquetado" dentro del mapa de strings
+                    String jsonRespuesta = objectMapper.writeValueAsString(respuestaApi);
+                    dataFCM.put("payload_json", jsonRespuesta);
+
+                    NotificacionDTO.NotificacionRequestDTO notifRequest = NotificacionDTO.NotificacionRequestDTO.builder()
+                            .title("¡Afiliación Completada!")
+                            .body("Presiona para ver el estado de tus afiliaciones!")
+                            .data(dataFCM)
+                            .build();
+
+                    fcmService.sendNotificationToUser(notifRequest, usuario.getId());
+
+                    System.out.println("✅ Notificación FCM enviada al usuario ID: " + usuario.getId());
+
                 } catch (Exception e) {
-                    System.out.println("Usuario no encontrado");
+                    System.err.println("❌ Error enviando FCM en afiliación: " + e.getMessage());
                     e.printStackTrace();
                 }
             });
-
             System.out.println("---- AFILIACIÓN COMPLETADA EXITOSAMENTE (" + provinciaAlias + ") ----");
         } catch (Exception e) {
             System.err.println("Error en afiliación: " + e.getMessage());

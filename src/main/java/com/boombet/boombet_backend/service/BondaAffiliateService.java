@@ -30,6 +30,7 @@ public class BondaAffiliateService {
 
     /**
      * POST: Crea un afiliado en Bonda usando el ID del Usuario como código.
+     * NO ABUSAR DE ESTE ENDPOINT EN TESTING, los afiliados a bonda son pagos.
      */
     public void crearAfiliado(Long idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
@@ -63,7 +64,7 @@ public class BondaAffiliateService {
 
     /**
      * DELETE: Elimina (soft-delete) un afiliado en Bonda.
-     * La eliminación es temporal por 30 días, luego permanente.
+     * La eliminación es temporal por 30 días, luego permanente (Esta lógica la define bonda)
      */
     public void eliminarAfiliado(Long idUsuario) {
         String code = String.valueOf(idUsuario);

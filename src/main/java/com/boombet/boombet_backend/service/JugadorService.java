@@ -19,6 +19,11 @@ public class JugadorService {
     private final JugadorRepository jugadorRepository;
     private final UsuarioRepository usuarioRepository;
 
+    /**
+     * Crea un JUGADOR.
+     * @param userData -> Datos del jugador
+     * @return
+     */
     public Jugador crearJugador(AffiliationDTO userData) {
         Jugador jugador = Jugador.builder()
                 .nombre(userData.getNombre())
@@ -40,7 +45,8 @@ public class JugadorService {
         return jugadorRepository.save(jugador);
     }
 
-    @PreAuthorize("authentication.principal.jugador?.id == #id")
+    //Devuelve los datos del jugador
+    @PreAuthorize("authentication.principal.jugador?.id == #id") //El authentication principal debería usarlo el controller!
     public JugadorDTO getJugador(Long id) {
         Jugador jugador = jugadorRepository.findById(id).orElse(null);
         Usuario usuario = usuarioRepository.findByJugador_Id(id).orElse((null));
@@ -59,7 +65,6 @@ public class JugadorService {
 
 
         if (dto.getUsername() != null) {usuario.setUsername(dto.getUsername());}
-
         if (dto.getNombre() != null) { jugador.setNombre(dto.getNombre()); }
         if (dto.getApellido() != null) { jugador.setApellido(dto.getApellido()); }
         if (dto.getEmail() != null) { jugador.setEmail(dto.getEmail()); }

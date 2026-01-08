@@ -15,7 +15,12 @@ public class FCMService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    // Método principal: Enviar notificación buscando al usuario por ID
+    /**
+     * Envía una notificación push utilizando Firebase Cloud Messaging.
+     * @param request -> Datos de la notificación
+     * @param userId -> Id del usuario a notificar. Con este se extrae el FCM token para enviar la notificacion
+     * @throws Exception -> Exception si falla el servicio de FCM o no se encuentra el usuario.
+     */
     public void sendNotificationToUser(NotificacionRequestDTO request, Long userId) throws Exception {
 
 

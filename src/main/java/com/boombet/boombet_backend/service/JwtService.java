@@ -27,6 +27,12 @@ public class JwtService {
     @Value("${application.security.jwt.secret-key}")
     private String SECRET_KEY;
 
+    /**
+     * Crea el JWT para un usuario.
+     * @param extraClaims Data extra que lleva el JWT.
+     * @param userDetails
+     * @return
+     */
     private String getToken(Map<String,Object> extraClaims, UserDetails userDetails) {
 
         Usuario user = (Usuario) userDetails;
@@ -70,10 +76,10 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        // 1. Extraemos el email que viene en el token (aunque el método se llame extractUsername)
+        // Extraemos el email que viene en el token (aunque el método se llame extractUsername)
         final String emailInToken = extractUsername(token);
 
-        // 2. Obtenemos el email real del usuario de la DB
+        // Obtenemos el email real del usuario de la DB
         // Hacemos cast porque UserDetails no tiene getEmail() nativo
         String userEmail = ((Usuario) userDetails).getEmail();
 
