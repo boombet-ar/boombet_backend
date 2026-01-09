@@ -26,7 +26,13 @@ public class FCMController {
     @Autowired
     private FCMService fcmService;
 
-    @PostMapping("/send")
+    /**
+     * Envia una notificación al usuario que hace la request.
+     * @param usuario -> usuario extraido del jwt
+     * @param request -> datos de la notificacion
+     * @return
+     */
+    @PostMapping("/me")
     public ResponseEntity<?> sendNotification(@AuthenticationPrincipal Usuario usuario, @RequestBody NotificacionRequestDTO request) {
         Long userId = usuario.getId();
 
@@ -42,8 +48,6 @@ public class FCMController {
         }
     }
 
-
-
     @Operation(summary = "Guardar Token FCM", description = "Actualiza el token de Firebase del usuario para notificaciones push. " +
             "BODY: { \"token\":\"token fcm\"}")
     @ApiResponses(value = {
@@ -51,6 +55,7 @@ public class FCMController {
             @ApiResponse(responseCode = "400", description = "Token inválido o faltante", content = @Content),
             @ApiResponse(responseCode = "403", description = "Usuario no autenticado", content = @Content)
     })
+
     @PostMapping("/save_fcmtoken")
     public ResponseEntity<?> saveFCMToken(@AuthenticationPrincipal Usuario usuario, @RequestBody Map<String, String> token ) {
         usuario.setFcmToken(token.get("token"));

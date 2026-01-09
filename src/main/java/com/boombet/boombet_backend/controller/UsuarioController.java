@@ -110,8 +110,13 @@ public class UsuarioController {
     }
 
 
-    @PostMapping("/auth/affiliate") //Cuando el usuario le pega a /verify, debe pegarle tambien a este endpoint.
+    @PostMapping("/auth/affiliate")
     public ResponseEntity<String> affiliate(@RequestBody RegistroRequestDTO input) {
+
+        /**
+         * Agregar verificacion por provincia antes de iniciar afiliacion.
+         * Determinar si lo hago acá o dentro de iniciarAfiliacionAsync()
+         */
         try {
             usuarioService.iniciarAfiliacionAsync(input.getConfirmedData(), input.getWebsocketLink());
             return ResponseEntity.ok("Afiliación iniciada.");

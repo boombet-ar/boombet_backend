@@ -1,5 +1,6 @@
 package com.boombet.boombet_backend.service;
 
+import com.boombet.boombet_backend.dto.NotificacionDTO.NotificacionRequestDTO;
 import com.boombet.boombet_backend.entity.Publicacion;
 import com.boombet.boombet_backend.dao.PublicacionRepository;
 import com.boombet.boombet_backend.entity.Usuario;
@@ -12,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.boombet.boombet_backend.dto.PublicacionDTO.PublicacionRequestDTO;
 import com.boombet.boombet_backend.dto.PublicacionDTO.PublicacionResponseDTO;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 @Service
 @RequiredArgsConstructor
@@ -19,20 +23,38 @@ public class PublicacionService {
 
     private final PublicacionRepository publicacionRepository;
 
+    private final FCMService fcmService;
 
     @Transactional
-    public PublicacionResponseDTO crearPublicacion(PublicacionRequestDTO dto, Usuario usuario) {
+    public PublicacionResponseDTO crearPublicacion(PublicacionRequestDTO dto, Usuario usuario){
 
         Publicacion publicacion = Publicacion.builder()
                 .content(dto.content())
                 .usuario(usuario)
                 .build();
 
-        if (dto.parentId() != null) {
+        if (dto.parentId() != null) { //Es respuesta?
             Publicacion publicacionPadre = publicacionRepository.findById(dto.parentId())
                     .orElseThrow(() -> new RuntimeException("No se puede responder a una publicación que no existe (ID: " + dto.parentId() + ")"));
 
             publicacion.setParent(publicacionPadre);
+
+            try {
+                Usuario usuarioPadre = publicacionPadre.getUsuario();
+                Map<String, String> dataFCM = new HashMap<>();
+
+                dataFCM.put("deeplink", "boombet://publicaciones/" + publicacionPadre.getId());
+
+                NotificacionRequestDTO notificacion = NotificacionRequestDTO.builder()
+                        .title("Boombet")
+                        .body(usuario.getUsername() + " respondió a tu publicación!")
+                        .data(dataFCM)
+                        .build();
+
+                fcmService.sendNotificationToUser(notificacion, usuarioPadre.getId());
+            } catch (Exception e) {
+                System.err.println("Error enviando push notification: " + e.getMessage());
+            }
         }
 
         publicacionRepository.save(publicacion);

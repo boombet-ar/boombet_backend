@@ -183,9 +183,6 @@ public class UsuarioService {
             }
 
 
-
-
-
             String query = "SELECT alias FROM provincias WHERE nombre = ?";
             String provinciaAlias;
             try {
@@ -257,6 +254,7 @@ public class UsuarioService {
                 } catch (Exception e) {
                     System.err.println("❌ Error enviando FCM en afiliación: " + e.getMessage());
                     e.printStackTrace();
+                    enviarErrorPorSocket(websocketLink, e.getMessage());
                 }
             });
             System.out.println("---- AFILIACIÓN COMPLETADA EXITOSAMENTE (" + provinciaAlias + ") ----");
