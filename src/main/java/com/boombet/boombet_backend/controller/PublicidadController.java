@@ -53,6 +53,22 @@ public class PublicidadController {
     public ResponseEntity<PublicidadDTO> nuevaPublicidadNotif(@RequestHeader(value = "key", required = true) String apiKey,
                                                               @RequestBody @Valid PublicidadDTO publicidad) throws Exception{
 
+
+        System.out.println(">>> DEBUG AZURE:");
+        System.out.println("1. Token recibido (Header): '" + apiKey + "'");
+        System.out.println("2. Token esperado (Env): '" + expectedToken + "'");
+
+        if (expectedToken == null) {
+            System.out.println("3. ERROR: La variable expectedToken es NULL. Revisa application.properties en Azure.");
+        }
+        // ---------------------
+
+        if (expectedToken == null || !expectedToken.equals(apiKey)) {
+            System.out.println(">>> RECHAZADO: Retornando 403");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+
         if (!expectedToken.equals(apiKey)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
