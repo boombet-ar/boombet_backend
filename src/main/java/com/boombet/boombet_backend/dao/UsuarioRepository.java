@@ -4,8 +4,10 @@ package com.boombet.boombet_backend.dao;
 
 import com.boombet.boombet_backend.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -23,4 +25,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     boolean existsByUsername(String username);
 
+    @Query("SELECT u.fcmToken FROM Usuario u WHERE u.fcmToken IS NOT NULL AND u.fcmToken != ''")
+    List<String> findAllFcmTokens();
 }

@@ -33,9 +33,9 @@ public class UsuarioController {
     }
 
     @PostMapping("/auth/register")
-    public ResponseEntity<AuthResponseDTO> register(@Valid @RequestBody RegistroRequestDTO credsUsuario) {
+    public ResponseEntity<AuthDTO.AuthResponseDTO> register(@Valid @RequestBody RegistroRequestDTO credsUsuario) {
         try {
-            AuthResponseDTO response = usuarioService.register(credsUsuario);
+            AuthDTO.AuthResponseDTO response = usuarioService.register(credsUsuario);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
@@ -43,7 +43,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO credsUsuario) {
+    public ResponseEntity<AuthDTO.AuthResponseDTO> login(@RequestBody LoginRequestDTO credsUsuario) {
         try {
             return ResponseEntity.ok(usuarioService.login(credsUsuario));
         }catch(org.springframework.security.authentication.BadCredentialsException e){
@@ -199,7 +199,7 @@ public class UsuarioController {
 
 
     @PostMapping("/auth/refresh")
-    public ResponseEntity<AuthResponseDTO> refreshToken(@RequestBody AuthResponseDTO.RefreshTokenRequestDTO request) {
+    public ResponseEntity<AuthDTO.AuthResponseDTO> refreshToken(@RequestBody AuthDTO.RefreshTokenRequestDTO request) {
         try {
             return ResponseEntity.ok(usuarioService.refreshToken(request.refreshToken()));
         } catch (Exception e) {

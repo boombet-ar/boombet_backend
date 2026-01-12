@@ -7,16 +7,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class AuthResponseDTO {
-    private String accessToken;
-    private Object playerData;
-    private String refreshToken;
-    @JsonProperty("fcm_token")
-    private String fcmToken;
+
+public class AuthDTO {
+
+    @Builder
+    public record AuthResponseDTO(
+        String accessToken,
+         Object playerData,
+        String refreshToken,
+        @JsonProperty("fcm_token")
+        String fcmToken
+    ){}
 
     @Builder
     public record RefreshTokenRequestDTO(String refreshToken) {};
