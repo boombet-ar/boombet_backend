@@ -164,7 +164,7 @@ public class UsuarioService {
         String token = jwtService.getToken(nuevoUsuario);
 
         return AuthResponseDTO.builder()
-                .token(token)
+                .accessToken(token)
                 .playerData(userData)
                 .build();
     }
@@ -300,9 +300,33 @@ public class UsuarioService {
         String token = jwtService.getToken(usuario);
 
         return AuthResponseDTO.builder()
-                .token(token)
+                .accessToken(token)
                 .fcmToken(fcmToken)
                 .build();
+    }
+
+    public AuthResponseDTO refreshToken(String refreshToken) {
+        // Extraemos el email (usuario) del refresh token
+        String userEmail = jwtService.extractUsername(refreshToken);
+
+        if (userEmail != null) {
+            Usuario usuario = usuarioRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            // Validamos que el refresh token sea válido (firma y expiración)
+            if (jwtService.isTokenValid(refreshToken, usuario)) {
+
+                // Generamos un NUEVO Access Token
+                String newAccessToken = jwtService.generateAccessToken(usuario);
+
+
+                return AuthResponseDTO.builder()
+                        .accessToken(newAccessToken)
+                        .refreshToken(refreshToken)
+                        .build();
+            }
+        }
+        throw new RuntimeException("Refresh Token inválido o expirado");
     }
 
     public void verificarUsuario(String token) {
@@ -418,6 +442,34 @@ public class UsuarioService {
         Long idJugador = usuario.getJugador().getId();
 
         return jugadorRepository.encontrarCasinosDelJugador(idJugador);
+    }
+
+    public boolean canAffiliate(String dni) {
+        var jugadorOpt = jugadorRepository.findByDni(dni);
+
+        if (jugadorOpt.isEmpty()) {
+            System.out.println("Jugador no encontrado con DNI: " + dni);
+            return false;
+        }
+
+        String nombreProvincia = jugadorOpt.get().getProvincia();
+
+        if (nombreProvincia == null || nombreProvincia.trim().isEmpty()) {
+            System.out.println("El jugador no tiene provincia asignada");
+            return false;
+        }
+
+        String sql = "SELECT count(*) FROM provincias WHERE nombre = ?";
+
+        try {
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, nombreProvincia);
+
+            return count != null && count > 0;
+
+        } catch (Exception e) {
+            System.err.println("Error consultando tabla provincias: " + e.getMessage());
+            return false;
+        }
     }
 
 }

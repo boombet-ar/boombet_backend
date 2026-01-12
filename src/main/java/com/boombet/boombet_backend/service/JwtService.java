@@ -24,6 +24,34 @@ public class JwtService {
         return getToken(new HashMap<>(),usuario);
     }
 
+    // Duración: 1 Hora para Access Token
+    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60;
+    // Duración: 7 Días para Refresh Token
+    private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7;
+
+
+    public String generateAccessToken(UserDetails usuario) {
+        return buildToken(new HashMap<>(), usuario, ACCESS_TOKEN_EXPIRATION);
+    }
+
+    public String generateRefreshToken(UserDetails usuario) {
+        return buildToken(new HashMap<>(), usuario, REFRESH_TOKEN_EXPIRATION);
+    }
+
+    private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
+        Usuario user = (Usuario) userDetails;
+        Long jugadorId = (user.getJugador() != null) ? user.getJugador().getId() : null;
+
+        return Jwts
+                .builder()
+                .setClaims(extraClaims)
+                .setSubject(user.getEmail())
+                .claim("idJugador", jugadorId)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
     @Value("${application.security.jwt.secret-key}")
     private String SECRET_KEY;
 

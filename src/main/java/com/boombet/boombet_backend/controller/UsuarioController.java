@@ -113,15 +113,19 @@ public class UsuarioController {
     @PostMapping("/auth/affiliate")
     public ResponseEntity<String> affiliate(@RequestBody RegistroRequestDTO input) {
 
-        /**
-         * Agregar verificacion por provincia antes de iniciar afiliacion.
-         * Determinar si lo hago acá o dentro de iniciarAfiliacionAsync()
-         */
-        try {
-            usuarioService.iniciarAfiliacionAsync(input.getConfirmedData(), input.getWebsocketLink());
-            return ResponseEntity.ok("Afiliación iniciada.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+        if (input.getConfirmedData() == null) {
+            return ResponseEntity.badRequest().body("Faltan datos del jugador.");
+        }
+
+        if(usuarioService.canAffiliate(input.getConfirmedData().getDni())){
+            try {
+                usuarioService.iniciarAfiliacionAsync(input.getConfirmedData(), input.getWebsocketLink());
+                return ResponseEntity.ok("Afiliación iniciada.");
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+            }}
+        else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No contamos con casinos disponibles en la provincia.");
         }
     }
 
@@ -191,4 +195,17 @@ public class UsuarioController {
     public ResponseEntity<List<CasinoDTO.casinosList>> listarCasinos(@AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(usuarioService.listarCasinosAfiliados(usuario.getId()));
     }
+
+
+
+    @PostMapping("/auth/refresh")
+    public ResponseEntity<AuthResponseDTO> refreshToken(@RequestBody AuthResponseDTO.RefreshTokenRequestDTO request) {
+        try {
+            return ResponseEntity.ok(usuarioService.refreshToken(request.refreshToken()));
+        } catch (Exception e) {
+            // Si falla, el front debe desloguear al usuario
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Token inválido, inicie sesión nuevamente.");
+        }
+    }
+
 }
