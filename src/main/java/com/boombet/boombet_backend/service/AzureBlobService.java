@@ -74,6 +74,11 @@ public class AzureBlobService {
         }
     }
 
+    /**
+     * recibe una url y devuelve el nombre del blob. Sirve para deleteBlob()
+     * @param url
+     * @return
+     */
     private String extractBlobNameFromUrl(String url) {
         try {
             return url.substring(url.lastIndexOf('/') + 1);

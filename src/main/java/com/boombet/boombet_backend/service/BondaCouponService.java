@@ -99,7 +99,9 @@ public class BondaCouponService {
      */
     public Map<String, Object> obtenerCuponPorId(Long idUsuario, String idCupon) {
         String codigoAfiliado = String.valueOf(idUsuario);
-        //String codigoAfiliado = "123456";
+
+
+        //String codigoAfiliado = "123456"; <-- codigo de afiliado para test
 
         try {
             Map<String, Object> cupon = restClient.get()
@@ -166,7 +168,7 @@ public class BondaCouponService {
         Por ahora no usamos el sistema de puntos
         */
         // --- LÓGICA DE BONDA ---
-        //String codigoAfiliado = "123456"; // O
+        //String codigoAfiliado = "123456"; <-- codigo de afiliado para test
         String codigoAfiliado = String.valueOf(idUsuario);
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
@@ -205,8 +207,7 @@ public class BondaCouponService {
      */
     public Map<String, Object> obtenerHistorialCupones(Long idUsuario) {
 
-        // Mantenemos el ID de prueba "123456" por consistencia con el resto del código actual.
-        //String codigoAfiliado = "123456";
+        //String codigoAfiliado = "123456"; <-- codigo de afiliado para test
         String codigoAfiliado = String.valueOf(idUsuario);
 
         try {
@@ -227,6 +228,11 @@ public class BondaCouponService {
     }
 
 
+    /**
+     * Devuelve las categorias de cupones disponibles
+     * @param idUsuario
+     * @return
+     */
     public List<Map<String, Object>> obtenerCategorias(Long idUsuario) {
         String codigoAfiliado = String.valueOf(idUsuario);
 

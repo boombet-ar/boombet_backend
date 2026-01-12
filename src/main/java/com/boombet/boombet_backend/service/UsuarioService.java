@@ -1,5 +1,6 @@
 package com.boombet.boombet_backend.service;
 
+import com.boombet.boombet_backend.controller.FCMController;
 import com.boombet.boombet_backend.dao.JugadorRepository;
 import com.boombet.boombet_backend.dao.UsuarioRepository;
 import com.boombet.boombet_backend.dto.*;
@@ -7,6 +8,7 @@ import com.boombet.boombet_backend.entity.Jugador;
 import com.boombet.boombet_backend.entity.Usuario;
 import com.boombet.boombet_backend.utils.UsuarioUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -43,7 +45,9 @@ public class UsuarioService {
     @Autowired
     @Lazy
     private UsuarioService self;
-
+    private final ObjectMapper objectMapper;
+    private final FCMService fcmService;
+    private final JugadorRepository jugadorRepository;
     private final AzureBlobService azureBlobService;
     private final EmailService emailService;
     private final JdbcTemplate jdbcTemplate;
@@ -51,13 +55,13 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final UsuarioRepository usuarioRepository;
     private final AuthenticationManager authenticationManager;
-    private final JugadorRepository jugadorRepository;
     private final RestClient restClient;
     private final JugadorService jugadorService;
     private final WebSocketService websocketService;
 
+
     public UsuarioService(
-            JdbcTemplate jdbcTemplate,
+            ObjectMapper objectMapper, JdbcTemplate jdbcTemplate,
             JwtService jwtService,
             PasswordEncoder passwordEncoder,
             UsuarioRepository usuarioRepository,
@@ -67,8 +71,11 @@ public class UsuarioService {
             @Qualifier("affiliatorRestClient") RestClient restClient,
             EmailService emailService,
             JugadorRepository jugadorRepository,
-            AzureBlobService azureBlobService
+            AzureBlobService azureBlobService,
+            FCMService fcmService
+
     ) {
+        this.objectMapper = objectMapper;
         this.jugadorService = jugadorService;
         this.jdbcTemplate = jdbcTemplate;
         this.jwtService = jwtService;
@@ -80,12 +87,13 @@ public class UsuarioService {
         this.emailService = emailService;
         this.jugadorRepository = jugadorRepository;
         this.azureBlobService = azureBlobService;
+        this.fcmService = fcmService;
     }
 
 
 
     @Transactional
-    public void register(RegistroRequestDTO inputWrapper) {
+    public AuthResponseDTO register(RegistroRequestDTO inputWrapper) {
         /*
          * Hashea la contraseña
          * Hace la solicitud a datadash y recibe datos del usuario
@@ -152,8 +160,13 @@ public class UsuarioService {
                 htmlBody
         );
 
-        //Solo devuelve un 200 si funcionó.
 
+        String token = jwtService.getToken(nuevoUsuario);
+
+        return AuthResponseDTO.builder()
+                .accessToken(token)
+                .playerData(userData)
+                .build();
     }
 
     @Async
@@ -168,8 +181,6 @@ public class UsuarioService {
                 System.err.println("Afiliación fallida: No hay provincia en los datos.");
                 return;
             }
-
-
 
 
             String query = "SELECT alias FROM provincias WHERE nombre = ?";
@@ -191,6 +202,8 @@ public class UsuarioService {
                     .retrieve()
                     .body(new ParameterizedTypeReference<Map<String, Object>>() {
                     });
+
+
             System.out.println("---- RESPUESTA RECIBIDA, NOTIFICANDO WEBSOCKET ----");
             WebsocketDTO notificacion = new WebsocketDTO();
             notificacion.setWebsocketLink(websocketLink); // Para que el servicio extraiga el ID
@@ -211,8 +224,39 @@ public class UsuarioService {
                     notificacion.setResponses(new HashMap<>());
                 }
             }
-
             websocketService.sendToWebSocket(notificacion);
+            usuarioRepository.findByEmail(datosAfiliacion.getEmail()).ifPresent(usuario -> {
+                try {
+                    System.out.println("---- PREPARANDO NOTIFICACIÓN FCM ----");
+
+                    // 2. Preparamos el mapa de datos (DATA PAYLOAD)
+                    // Recordá: FCM solo acepta <String, String> en el campo 'data'
+                    Map<String, String> dataFCM = new HashMap<>();
+
+                    // A. Agregamos el Deeplink directo
+                    dataFCM.put("\"deeplink\"", "boombet://affiliation/completed");
+
+                    // Convertimos la respuesta compleja de la API a un String JSON
+                    // Esto permite que el objeto viaje "empaquetado" dentro del mapa de strings
+                    String jsonRespuesta = objectMapper.writeValueAsString(respuestaApi);
+                    dataFCM.put("payload_json", jsonRespuesta);
+
+                    NotificacionDTO.NotificacionRequestDTO notifRequest = NotificacionDTO.NotificacionRequestDTO.builder()
+                            .title("¡Afiliación Completada!")
+                            .body("Presiona para ver el estado de tus afiliaciones!")
+                            .data(dataFCM)
+                            .build();
+
+                    fcmService.sendNotificationToUser(notifRequest, usuario.getId());
+
+                    System.out.println("✅ Notificación FCM enviada al usuario ID: " + usuario.getId());
+
+                } catch (Exception e) {
+                    System.err.println("❌ Error enviando FCM en afiliación: " + e.getMessage());
+                    e.printStackTrace();
+                    enviarErrorPorSocket(websocketLink, e.getMessage());
+                }
+            });
             System.out.println("---- AFILIACIÓN COMPLETADA EXITOSAMENTE (" + provinciaAlias + ") ----");
         } catch (Exception e) {
             System.err.println("Error en afiliación: " + e.getMessage());
@@ -242,6 +286,13 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByUsernameOrEmail(request.getIdentifier(), request.getIdentifier())
                 .orElseThrow();
 
+        String fcmToken = null;
+        if (request.getFcmToken() != null && !request.getFcmToken().isEmpty()) {
+            fcmToken = request.getFcmToken();
+            usuario.setFcmToken(fcmToken);
+            usuarioRepository.save(usuario);
+        }
+
         if (!usuario.isVerified()) {
             throw new RuntimeException("Usuario no verificado");
         }
@@ -249,8 +300,33 @@ public class UsuarioService {
         String token = jwtService.getToken(usuario);
 
         return AuthResponseDTO.builder()
-                .token(token)
+                .accessToken(token)
+                .fcmToken(fcmToken)
                 .build();
+    }
+
+    public AuthResponseDTO refreshToken(String refreshToken) {
+        // Extraemos el email (usuario) del refresh token
+        String userEmail = jwtService.extractUsername(refreshToken);
+
+        if (userEmail != null) {
+            Usuario usuario = usuarioRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            // Validamos que el refresh token sea válido (firma y expiración)
+            if (jwtService.isTokenValid(refreshToken, usuario)) {
+
+                // Generamos un NUEVO Access Token
+                String newAccessToken = jwtService.generateAccessToken(usuario);
+
+
+                return AuthResponseDTO.builder()
+                        .accessToken(newAccessToken)
+                        .refreshToken(refreshToken)
+                        .build();
+            }
+        }
+        throw new RuntimeException("Refresh Token inválido o expirado");
     }
 
     public void verificarUsuario(String token) {
@@ -326,7 +402,6 @@ public class UsuarioService {
     }
 
 
-
     @Value("${spring.cloud.azure.storage.blob.container-name_iconos}")
     private String iconsContainer;
 
@@ -367,6 +442,34 @@ public class UsuarioService {
         Long idJugador = usuario.getJugador().getId();
 
         return jugadorRepository.encontrarCasinosDelJugador(idJugador);
+    }
+
+    public boolean canAffiliate(String dni) {
+        var jugadorOpt = jugadorRepository.findByDni(dni);
+
+        if (jugadorOpt.isEmpty()) {
+            System.out.println("Jugador no encontrado con DNI: " + dni);
+            return false;
+        }
+
+        String nombreProvincia = jugadorOpt.get().getProvincia();
+
+        if (nombreProvincia == null || nombreProvincia.trim().isEmpty()) {
+            System.out.println("El jugador no tiene provincia asignada");
+            return false;
+        }
+
+        String sql = "SELECT count(*) FROM provincias WHERE nombre = ?";
+
+        try {
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, nombreProvincia);
+
+            return count != null && count > 0;
+
+        } catch (Exception e) {
+            System.err.println("Error consultando tabla provincias: " + e.getMessage());
+            return false;
+        }
     }
 
 }

@@ -44,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll() //libera los endpoints de error
                         .requestMatchers("/api/webhooks/notify-socket").permitAll()
                         .requestMatchers("/affiliation/**").permitAll()
+                        .requestMatchers("/api/users/auth/**").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

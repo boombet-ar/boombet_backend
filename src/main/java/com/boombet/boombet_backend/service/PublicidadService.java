@@ -88,4 +88,7 @@ public class PublicidadService {
                 entidad.getText()
         );
     }
+
+    public void notificarNuevaPublicidad() {
+    }
 }

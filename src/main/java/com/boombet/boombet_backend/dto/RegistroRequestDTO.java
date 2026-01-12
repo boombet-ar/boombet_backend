@@ -15,5 +15,5 @@ public class RegistroRequestDTO {
 
     private String websocketLink;
     
-    private String n8nWebhookLink;
+    private String n8nWebhookLink; // para determinar si ingreso por form o por app
 }
