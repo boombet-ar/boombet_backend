@@ -93,7 +93,7 @@ public class UsuarioService {
 
 
     @Transactional
-    public AuthResponseDTO register(RegistroRequestDTO inputWrapper) {
+    public AuthDTO.AuthResponseDTO register(RegistroRequestDTO inputWrapper) {
         /*
          * Hashea la contraseña
          * Hace la solicitud a datadash y recibe datos del usuario
@@ -163,7 +163,7 @@ public class UsuarioService {
 
         String token = jwtService.getToken(nuevoUsuario);
 
-        return AuthResponseDTO.builder()
+        return AuthDTO.AuthResponseDTO.builder()
                 .accessToken(token)
                 .playerData(userData)
                 .build();
@@ -274,7 +274,7 @@ public class UsuarioService {
         websocketService.sendToWebSocket(errorDto);
     }
 
-    public AuthResponseDTO login(LoginRequestDTO request) {
+    public AuthDTO.AuthResponseDTO login(LoginRequestDTO request) {
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -297,15 +297,19 @@ public class UsuarioService {
             throw new RuntimeException("Usuario no verificado");
         }
 
-        String token = jwtService.getToken(usuario);
+        String accessToken = jwtService.generateAccessToken(usuario);
 
-        return AuthResponseDTO.builder()
-                .accessToken(token)
+        // 2. Generamos Refresh Token
+        String refreshToken = jwtService.generateRefreshToken(usuario);
+
+        return AuthDTO.AuthResponseDTO.builder()
+                .accessToken(accessToken)
                 .fcmToken(fcmToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 
-    public AuthResponseDTO refreshToken(String refreshToken) {
+    public AuthDTO.AuthResponseDTO refreshToken(String refreshToken) {
         // Extraemos el email (usuario) del refresh token
         String userEmail = jwtService.extractUsername(refreshToken);
 
@@ -320,7 +324,7 @@ public class UsuarioService {
                 String newAccessToken = jwtService.generateAccessToken(usuario);
 
 
-                return AuthResponseDTO.builder()
+                return AuthDTO.AuthResponseDTO.builder()
                         .accessToken(newAccessToken)
                         .refreshToken(refreshToken)
                         .build();

@@ -25,9 +25,12 @@ public class JwtService {
     }
 
     // Duración: 1 Hora para Access Token
-    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60;
+    //private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60;
+
+    private static final long ACCESS_TOKEN_EXPIRATION = 20;
     // Duración: 7 Días para Refresh Token
-    private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7;
+    //private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7;
+    private static final long REFRESH_TOKEN_EXPIRATION = 20;
 
 
     public String generateAccessToken(UserDetails usuario) {

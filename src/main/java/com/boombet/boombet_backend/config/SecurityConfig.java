@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/webhooks/notify-socket").permitAll()
                         .requestMatchers("/affiliation/**").permitAll()
                         .requestMatchers("/api/users/auth/**").permitAll()
+                        .requestMatchers("/api/publicidades/nueva_publicidad_notif").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",

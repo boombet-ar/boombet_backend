@@ -89,6 +89,5 @@ public class PublicidadService {
         );
     }
 
-    public void notificarNuevaPublicidad() {
-    }
+
 }
