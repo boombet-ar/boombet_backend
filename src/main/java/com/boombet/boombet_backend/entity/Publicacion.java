@@ -35,4 +35,7 @@ public class Publicacion {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Publicacion parent;
+
+    @Column(name= "casino_gral_id",nullable = true)
+    private Long casinoGralId;
 }

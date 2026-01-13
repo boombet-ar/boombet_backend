@@ -113,10 +113,11 @@ public class UsuarioController {
     @PostMapping("/auth/affiliate")
     public ResponseEntity<String> affiliate(@RequestBody RegistroRequestDTO input) {
 
+        /*
         if (input.getConfirmedData() == null) {
             return ResponseEntity.badRequest().body("Faltan datos del jugador.");
         }
-
+    */
         if(usuarioService.canAffiliate(input.getConfirmedData().getDni())){
             try {
                 usuarioService.iniciarAfiliacionAsync(input.getConfirmedData(), input.getWebsocketLink());

@@ -48,6 +48,8 @@ public class DatadashService {
                 .accept(MediaType.APPLICATION_JSON)
                 .body(requestBody)
                 .retrieve()
+                .onStatus(status -> status.value() == 400, (request, response) -> {
+                    throw new IllegalArgumentException("El género seleccionado es incorrecto. Por favor, verificá tus datos e intentalo nuevamente.");
+                })
                 .body(DatadashDTO.DatadashInformResponse.class);
-    }
-}
+}}

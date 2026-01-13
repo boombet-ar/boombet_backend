@@ -46,15 +46,17 @@ public class PublicacionController {
     }
 
     /**
-     *
+     * @param casinoGralId id del casino del que queremos las publicaciones
      * @param pageable ?page=n?size=m
      * @return Devuelve las publicaciones paginadas
      */
     @GetMapping
     public ResponseEntity<Page<PublicacionResponseDTO>> verPublicaciones(
+            @AuthenticationPrincipal Usuario usuario,
+            @RequestParam(required = false, name="casino_id") Long  casinoGralId,
             @PageableDefault(size = 20, page = 0) Pageable pageable
     ) {
-        Page<PublicacionResponseDTO> respuestas = publicacionService.listarPublicaciones(pageable);
+        Page<PublicacionResponseDTO> respuestas = publicacionService.listarPublicaciones(usuario, casinoGralId, pageable);
         return ResponseEntity.ok(respuestas);
     }
 
