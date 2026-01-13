@@ -22,6 +22,7 @@ public interface JugadorRepository extends JpaRepository<Jugador, Long> {
 
     @Query(value = """
     SELECT 
+        cg.id AS id,
         cg.nombre_gral AS nombreGral,
         c.url AS url,
         cg.logo_url AS logoUrl   
@@ -31,4 +32,13 @@ public interface JugadorRepository extends JpaRepository<Jugador, Long> {
     WHERE a.id_jugador = :idJugador
     """, nativeQuery = true)
     List<CasinoDTO.casinosList> encontrarCasinosDelJugador(@Param("idJugador") Long idJugador);
+
+
+    @Query(value = "SELECT DISTINCT c.casino_gral_id " +
+            "FROM afiliaciones a " +
+            "JOIN casinos c ON a.id_casino = c.id " +
+            "WHERE a.id_jugador = :idJugador",
+            nativeQuery = true)
+    List<Long> findCasinoGralIdsByJugadorId(@Param("idJugador") Long idJugador); //Solo ids de los casinos del jugador
 }
+

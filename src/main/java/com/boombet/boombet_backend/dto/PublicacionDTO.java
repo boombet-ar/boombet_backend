@@ -14,7 +14,10 @@ public class PublicacionDTO {
             String content,
 
             @JsonProperty("parent_id")
-            Long parentId
+            Long parentId,
+
+            @JsonProperty("casino_gral_id")
+            Long casinoGralId
     ) {}
 
     @Builder
@@ -23,6 +26,7 @@ public class PublicacionDTO {
             String content,
             Long parentId,
             String username,
+            Long casinoGralId,
             LocalDateTime createdAt,
             String userIconUrl
 
