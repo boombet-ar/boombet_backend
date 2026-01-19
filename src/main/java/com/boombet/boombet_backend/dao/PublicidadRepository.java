@@ -28,5 +28,6 @@ public interface PublicidadRepository extends JpaRepository<Publicidad, Long> {
         """, nativeQuery = true)
     List<Publicidad> findByJugadorAfiliaciones(@Param("jugadorId") Long jugadorId);
 
+    List<Publicidad> findByCasinoGralIdIsNull();
 }
 
