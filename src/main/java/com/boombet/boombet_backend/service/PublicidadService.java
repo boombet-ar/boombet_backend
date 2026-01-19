@@ -72,6 +72,9 @@ public class PublicidadService {
 
     public List<PublicidadDTO> obtenerPublicidadesPorJugador(Long idJugador) {
         List<Publicidad> publicidades = publicidadRepository.findByJugadorAfiliaciones(idJugador);
+
+        publicidades.addAll(publicidadRepository.findByCasinoGralIdIsNull());
+
         System.out.println(ZonedDateTime.now(ARGENTINA_ZONE).toLocalDateTime());
         return publicidades.stream()
                 .map(this::mapToDTO)
