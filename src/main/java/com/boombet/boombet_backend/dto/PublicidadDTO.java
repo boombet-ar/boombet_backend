@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class PublicidadDTO {
 
-    @NotNull(message = "El ID del casino es obligatorio")
+    //@NotNull(message = "El ID del casino es obligatorio")
     private Integer casinoGralId;
 
     @NotNull(message = "La fecha de inicio es obligatoria")
