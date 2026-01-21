@@ -29,20 +29,20 @@ public class PublicidadService {
     /**
      * Tarea programada para borrar publicidades expiradas y sus archivos multimedia asociados.
      */
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 */30 * * * *")
     @Transactional
     public void borrarPublicidadesExpiradas() {
         LocalDateTime now = ZonedDateTime.now(ARGENTINA_ZONE).toLocalDateTime();
-        System.out.println(">>> ⏰ Iniciando limpieza de publicidades expiradas a las: " + now);
+
 
         List<Publicidad> expiradas = publicidadRepository.findByEndAtBefore(now);
 
         if (expiradas.isEmpty()) {
-            System.out.println(">>> ✅ No se encontraron publicidades expiradas.");
+
             return;
         }
 
-        System.out.println(">>> 🗑️ Encontradas " + expiradas.size() + " publicidades para borrar.");
+
 
         for (Publicidad pub : expiradas) {
             try {
@@ -50,14 +50,14 @@ public class PublicidadService {
                 azureBlobService.deleteBlob(pub.getMediaUrl(), containerPublicidad); //Ajustar
 
                 publicidadRepository.delete(pub);
-                System.out.println(">>> ✅ Borrado exitoso: ID=" + pub.getId() + ", URL=" + pub.getMediaUrl());
+
 
             } catch (Exception e) {
-                System.err.println(">>> ❌ Error crítico procesando publicidad ID " + pub.getId() + ". La operación falló para este ítem. Causa: " + e.getMessage());
+
                 throw new RuntimeException("Fallo la limpieza de publicidad: " + pub.getId(), e);
             }
         }
-        System.out.println("Limpieza finalizada.");
+
     }
 
     public List<PublicidadDTO> obtenerPublicidadesActivas() { //Devuelve todas las que están dentro del rango horario
@@ -75,7 +75,7 @@ public class PublicidadService {
 
         publicidades.addAll(publicidadRepository.findByCasinoGralIdIsNull());
 
-        System.out.println(ZonedDateTime.now(ARGENTINA_ZONE).toLocalDateTime());
+
         return publicidades.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
