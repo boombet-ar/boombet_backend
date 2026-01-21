@@ -3,6 +3,7 @@ package com.boombet.boombet_backend.service;
 import com.boombet.boombet_backend.dao.PublicidadRepository;
 import com.boombet.boombet_backend.dto.PublicidadDTO;
 import com.boombet.boombet_backend.entity.Publicidad;
+import org.springframework.cache.annotation.Cacheable;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,6 +61,7 @@ public class PublicidadService {
 
     }
 
+    @Cacheable("publicidadesActivas")
     public List<PublicidadDTO> obtenerPublicidadesActivas() { //Devuelve todas las que están dentro del rango horario
         LocalDateTime now = ZonedDateTime.now(ARGENTINA_ZONE).toLocalDateTime();
 
