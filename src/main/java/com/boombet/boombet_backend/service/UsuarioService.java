@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -155,6 +156,7 @@ public class UsuarioService {
                     .verificationToken(verificationToken)
                     .isVerified(false)
                     .afiliador(afiliador)
+                    .bondaEnabled(true)
                     .build();
 
 
@@ -484,4 +486,12 @@ public class UsuarioService {
         }
     }
 
+    @Scheduled(cron = "0 0 0 * * * ")
+    @Transactional
+    public void procesarUsuariosVencidos() {
+
+        usuarioRepository.desactivarFreeTrialVencidos();
+
+        System.out.println("Usuarios con free trial desactivados.");
+    }
 }

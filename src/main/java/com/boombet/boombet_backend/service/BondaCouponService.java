@@ -6,11 +6,13 @@ import com.boombet.boombet_backend.utils.CuponesUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +46,8 @@ public class BondaCouponService {
         int pageNum = (page != null && page > 0) ? page : 1;
         String sortOrder = (orderBy != null && !orderBy.isEmpty()) ? orderBy : "relevant";
         String codigoAfiliado = String.valueOf(idUsuario);
+
+        validateBondaEnabled(idUsuario);
 
         try {
             Map<String, Object> response = restClient.get()
@@ -100,7 +104,7 @@ public class BondaCouponService {
     public Map<String, Object> obtenerCuponPorId(Long idUsuario, String idCupon) {
         String codigoAfiliado = String.valueOf(idUsuario);
 
-
+        validateBondaEnabled(idUsuario);
         //String codigoAfiliado = "123456"; <-- codigo de afiliado para test
 
         try {
@@ -146,6 +150,7 @@ public class BondaCouponService {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
+        validateBondaEnabled(idUsuario);
         // 2. Obtener el cupón para saber su PRECIO
         // Reutilizamos tu método obtenerCuponPorId que ya calcula el precio usando CuponesUtils
         //Map<String, Object> cuponDetalle = obtenerCuponPorId(idUsuario, idCupon);
@@ -255,4 +260,15 @@ public class BondaCouponService {
             return Collections.emptyList();
         }
     }
+
+    private void validateBondaEnabled(Long idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                                           .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuario no encontrado"));
+
+        if (!usuario.isBondaEnabled()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No estas habilitado para recibir beneficios");
+        }
+    }
+
+
 }

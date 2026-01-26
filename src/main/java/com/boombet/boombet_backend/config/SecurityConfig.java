@@ -1,6 +1,7 @@
 package com.boombet.boombet_backend.config;
 
 
+import com.boombet.boombet_backend.entity.Usuario;
 import com.boombet.boombet_backend.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers("/affiliation/**").permitAll()
                         .requestMatchers("/api/users/auth/**").permitAll()
                         .requestMatchers("/api/publicidades/nueva_publicidad_notif").permitAll()
+                        .requestMatchers("/api/afiliadores/**").hasAuthority(Usuario.Role.ADMIN.name())
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
