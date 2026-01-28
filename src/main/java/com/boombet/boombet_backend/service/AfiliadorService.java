@@ -105,6 +105,10 @@ public class AfiliadorService {
         }
     }
 
+    public void deleteAfiliadorById(Long id) {
+        afiliadorRepository.deleteById(id);
+    }
+
 }
 
 

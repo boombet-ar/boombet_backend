@@ -62,6 +62,8 @@ public class UsuarioService {
     private final JugadorService jugadorService;
     private final WebSocketService websocketService;
     private final AfiliadorRepository afiliadorRepository;
+    @Autowired
+    private BondaAffiliateService bondaAffiliateService;
 
     public UsuarioService(
             ObjectMapper objectMapper, JdbcTemplate jdbcTemplate,
@@ -157,6 +159,7 @@ public class UsuarioService {
                     .isVerified(false)
                     .afiliador(afiliador)
                     .bondaEnabled(true)
+                    .fcmToken(inputWrapper.getFcmToken())
                     .build();
 
 
@@ -171,11 +174,14 @@ public class UsuarioService {
                 htmlBody
         );
 
-        String token = jwtService.getToken(nuevoUsuario);
+        String accessToken = jwtService.generateAccessToken(nuevoUsuario);
+
+        String refreshToken =  jwtService.generateRefreshToken(nuevoUsuario);
 
         return AuthDTO.AuthResponseDTO.builder()
-                                      .accessToken(token)
+                                      .accessToken(accessToken)
                                       .playerData(userData)
+                                      .refreshToken(refreshToken)
                                       .build();
     }
 
@@ -284,7 +290,7 @@ public class UsuarioService {
         websocketService.sendToWebSocket(errorDto);
     }
 
-    public AuthDTO.AuthResponseDTO login(LoginRequestDTO request) {
+    public AuthDTO.AuthResponseDTO   login(LoginRequestDTO request) {
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(

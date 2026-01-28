@@ -54,5 +54,11 @@ public class AfiliadorController {
         return ResponseEntity.ok(afiliadorActualizado);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAfiliadorById(@PathVariable Long id) {
+        afiliadorService.deleteAfiliadorById(id);
+        return ResponseEntity.noContent().build();
+    }
+
 
 }

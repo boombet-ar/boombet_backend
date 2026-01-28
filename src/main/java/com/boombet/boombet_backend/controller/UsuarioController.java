@@ -7,6 +7,7 @@ import com.boombet.boombet_backend.service.AfiliadorService;
 import com.boombet.boombet_backend.service.DatadashService;
 import com.boombet.boombet_backend.service.UsuarioService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -58,9 +59,19 @@ public class UsuarioController {
         }
     }
 
+    @Value("${security.custom.header-token}")
+    private String expectedToken;
 
-    @PostMapping("/auth/userData")
-    public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestBody UserDataRequestDTO input) {
+
+    @GetMapping("/auth/userData")
+    public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestHeader(value = "key", required = true) String apiKey,
+                                                                          @RequestBody UserDataRequestDTO input) {
+
+        if (!expectedToken.equals(apiKey)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+
         try {
 
             var response = datadashService.getUserData(input);

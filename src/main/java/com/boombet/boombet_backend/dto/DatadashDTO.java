@@ -36,6 +36,7 @@ public class DatadashDTO {
             @JsonProperty("fecha_nacimiento")
             String fechaNacimiento,
 
+            Integer edad,
             @JsonProperty("nume_docu")
             Long dni,
             @JsonProperty("cdi_codigo_de_identificacion")

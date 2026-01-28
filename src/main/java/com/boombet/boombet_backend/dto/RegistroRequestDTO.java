@@ -14,4 +14,7 @@ public class RegistroRequestDTO {
     private AffiliationDTO confirmedData;
 
     private String websocketLink;
+
+    @JsonProperty("fcm_token")
+    private String fcmToken;
 }
