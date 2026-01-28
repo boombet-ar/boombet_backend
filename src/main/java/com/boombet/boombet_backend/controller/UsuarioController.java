@@ -63,7 +63,7 @@ public class UsuarioController {
     private String expectedToken;
 
 
-    @GetMapping("/auth/userData")
+    @PostMapping("/auth/userData")
     public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestHeader(value = "key", required = true) String apiKey,
                                                                           @RequestBody UserDataRequestDTO input) {
 
