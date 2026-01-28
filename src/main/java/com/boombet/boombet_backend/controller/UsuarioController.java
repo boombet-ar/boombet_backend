@@ -3,11 +3,14 @@ import com.boombet.boombet_backend.dao.UsuarioRepository;
 import com.boombet.boombet_backend.dto.*;
 
 import com.boombet.boombet_backend.entity.Usuario;
+import com.boombet.boombet_backend.service.AfiliadorService;
 import com.boombet.boombet_backend.service.DatadashService;
 import com.boombet.boombet_backend.service.UsuarioService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,11 +28,13 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private DatadashService datadashService;
     private final UsuarioRepository usuarioRepository;
+    private AfiliadorService afiliadorService;
 
-    public UsuarioController(UsuarioService usuarioService, DatadashService datadashService, UsuarioRepository usuarioRepository) {
+    public UsuarioController(UsuarioService usuarioService, DatadashService datadashService, UsuarioRepository usuarioRepository, AfiliadorService afiliadorService) {
         this.usuarioService = usuarioService;
         this.datadashService = datadashService;
         this.usuarioRepository = usuarioRepository;
+        this.afiliadorService = afiliadorService;
     }
 
     @PostMapping("/auth/register")
@@ -46,7 +51,7 @@ public class UsuarioController {
     public ResponseEntity<AuthDTO.AuthResponseDTO> login(@RequestBody LoginRequestDTO credsUsuario) {
         try {
             return ResponseEntity.ok(usuarioService.login(credsUsuario));
-        }catch(org.springframework.security.authentication.BadCredentialsException e){
+        }catch(BadCredentialsException e){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario o contraseña incorrectos", e);
         }
         catch (IllegalArgumentException e) {
@@ -54,9 +59,19 @@ public class UsuarioController {
         }
     }
 
+    @Value("${security.custom.header-token}")
+    private String expectedToken;
 
-    @PostMapping("/auth/userData")
-    public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestBody UserDataRequestDTO input) {
+
+    @GetMapping("/auth/userData")
+    public ResponseEntity<DatadashDTO.DatadashInformResponse> getUserData(@RequestHeader(value = "key", required = true) String apiKey,
+                                                                          @RequestBody UserDataRequestDTO input) {
+
+        if (!expectedToken.equals(apiKey)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+
         try {
 
             var response = datadashService.getUserData(input);
@@ -209,4 +224,16 @@ public class UsuarioController {
         }
     }
 
+    @GetMapping("/auth/afiliador/verify/{token}") //está bien que sea sin autenticacion?
+    public ResponseEntity<AfiliadorDTO.VerificationResponseDTO> verifyAffiliatorToken(@PathVariable String token) {
+        boolean isValid = afiliadorService.verificarTokenAfiliador(token);
+
+        if (isValid) {
+            AfiliadorDTO.VerificationResponseDTO response = new AfiliadorDTO.VerificationResponseDTO(true, "Código válido.");
+            return ResponseEntity.ok(response);
+        } else {
+            AfiliadorDTO.VerificationResponseDTO response = new AfiliadorDTO.VerificationResponseDTO(false, "Afiliador no encontrado.");
+            return ResponseEntity.ok(response);
+        }
+    }
 }

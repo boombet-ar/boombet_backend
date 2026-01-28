@@ -1,6 +1,7 @@
 package com.boombet.boombet_backend.entity;
 
 
+import com.boombet.boombet_backend.entity.Afiliador;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -106,6 +107,10 @@ public class Usuario implements UserDetails {
 
     @Column(name="bonda_enabled", nullable = false)
     private boolean bondaEnabled = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "afiliador_id")
+    private Afiliador afiliador;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_jugador", referencedColumnName = "id")

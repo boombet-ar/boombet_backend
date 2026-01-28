@@ -15,23 +15,12 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserDataRequestDTO {
 
-    @NotBlank(message = "El nombre de usuario es obligatorio")
-    private String username;
-
-    @NotBlank(message = "El correo es obligatorio")
-    private String email;
-
-    @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
-    private String password;
-
-    @NotBlank(message = "El DNI es obligatorio")
-    @Pattern(regexp = "\\d+", message = "El DNI solo debe contener números")
-    private String dni;
 
     @NotBlank(message = "El género es obligatorio")
     private String genero;
 
-    @NotBlank(message = "El teléfono es obligatorio")
-    private String telefono;
+
+    @NotBlank(message = "El DNI es obligatorio")
+    @Pattern(regexp = "\\d+", message = "El DNI solo debe contener números")
+    private String dni;
 }

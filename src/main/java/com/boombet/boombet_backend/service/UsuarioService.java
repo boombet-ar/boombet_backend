@@ -1,9 +1,11 @@
 package com.boombet.boombet_backend.service;
 
 import com.boombet.boombet_backend.controller.FCMController;
+import com.boombet.boombet_backend.dao.AfiliadorRepository;
 import com.boombet.boombet_backend.dao.JugadorRepository;
 import com.boombet.boombet_backend.dao.UsuarioRepository;
 import com.boombet.boombet_backend.dto.*;
+import com.boombet.boombet_backend.entity.Afiliador;
 import com.boombet.boombet_backend.entity.Jugador;
 import com.boombet.boombet_backend.entity.Usuario;
 import com.boombet.boombet_backend.utils.UsuarioUtils;
@@ -17,6 +19,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,6 +34,7 @@ import java.util.*;
 @Service
 public class UsuarioService {
 
+
     @Value("${front.verifyurl}")
     String frontVerifyUrl;
 
@@ -39,7 +43,6 @@ public class UsuarioService {
 
     @Value("${affiliator.api.key}")
     private String affiliatorToken;
-
 
 
     @Autowired
@@ -58,7 +61,9 @@ public class UsuarioService {
     private final RestClient restClient;
     private final JugadorService jugadorService;
     private final WebSocketService websocketService;
-
+    private final AfiliadorRepository afiliadorRepository;
+    @Autowired
+    private BondaAffiliateService bondaAffiliateService;
 
     public UsuarioService(
             ObjectMapper objectMapper, JdbcTemplate jdbcTemplate,
@@ -72,8 +77,8 @@ public class UsuarioService {
             EmailService emailService,
             JugadorRepository jugadorRepository,
             AzureBlobService azureBlobService,
-            FCMService fcmService
-
+            FCMService fcmService,
+            AfiliadorRepository afiliadorRepository
     ) {
         this.objectMapper = objectMapper;
         this.jugadorService = jugadorService;
@@ -88,71 +93,80 @@ public class UsuarioService {
         this.jugadorRepository = jugadorRepository;
         this.azureBlobService = azureBlobService;
         this.fcmService = fcmService;
+        this.afiliadorRepository = afiliadorRepository;
     }
-
 
 
     @Transactional
     public AuthDTO.AuthResponseDTO register(RegistroRequestDTO inputWrapper) {
+        //IMPORTANTE: Ahora en el body debe venir tambien el codigo de afiliador
         /*
          * Hashea la contraseña
-         * Hace la solicitud a datadash y recibe datos del usuario
          * Crea un jugador y lo vincula con el usuario
          * */
 
-
-        AffiliationDTO userData = inputWrapper.getConfirmedData();
 
         //Si ya habia un usuario sin verificar, lo pisa
         //Si habia un usuario verificado, error
         //Si no habia nada, lo crea
 
+        AffiliationDTO userData = inputWrapper.getConfirmedData();
         UsuarioUtils.validarFormatoPassword(userData.getPassword());
 
-        if(usuarioRepository.existsByUsername(userData.getUser())){
+        if (usuarioRepository.existsByUsername(userData.getUser())) {
             throw new IllegalArgumentException("Ya existe un usuario con ese nombre");
         }
 
         String hashedPass = passwordEncoder.encode(userData.getPassword());
 
         Usuario nuevoUsuario = usuarioRepository.findByEmail(userData.getEmail())
-                .or(() -> usuarioRepository.findByDni(userData.getDni()))
-                .orElse(new Usuario());
+                                                .or(() -> usuarioRepository.findByDni(userData.getDni()))
+                                                .orElse(new Usuario());
 
 
         Jugador jugador = jugadorRepository.findByEmail(userData.getEmail())
-                .or(() -> jugadorRepository.findByDni(userData.getDni()))
-                .orElseGet( () -> jugadorService.crearJugador(userData));
+                                           .or(() -> jugadorRepository.findByDni(userData.getDni()))
+                                           .orElseGet(() -> jugadorService.crearJugador(userData));
 
 
         if (nuevoUsuario.getId() != null && nuevoUsuario.isVerified()) {
             throw new IllegalArgumentException("Ya existe una cuenta verificada con este correo o DNI");
         }
 
-        nuevoUsuario.setUsername(userData.getUser());
-        nuevoUsuario.setPassword(hashedPass);
-        nuevoUsuario.setRole(Usuario.Role.USER);
-        nuevoUsuario.setDni(userData.getDni());
-        nuevoUsuario.setEmail(userData.getEmail());
         Usuario.Genero generoEnum = Usuario.Genero.fromString(userData.getGenero());
-        nuevoUsuario.setGenero(generoEnum);
-        nuevoUsuario.setTelefono(userData.getTelefono());
-        nuevoUsuario.setJugador(jugador);
-
         String verificationToken = UUID.randomUUID().toString();
-        nuevoUsuario.setVerificationToken(verificationToken);
-        nuevoUsuario.setVerified(false);
+
+        Afiliador afiliador = null;
+        if (userData.getTokenAfiliador() != null && !userData.getTokenAfiliador().isEmpty()) {
+            afiliador = afiliadorRepository.findByTokenAfiliador(userData.getTokenAfiliador()).orElse(null);
+            if (afiliador != null) {
+                afiliador.setCantAfiliaciones(afiliador.getCantAfiliaciones() + 1);
+                afiliadorRepository.save(afiliador);
+            }
+        }
+
+        nuevoUsuario = Usuario.builder()
+                    .id(nuevoUsuario.getId())
+                    .username(userData.getUser())
+                    .password(hashedPass)
+                    .role(Usuario.Role.USER)
+                    .dni(userData.getDni())
+                    .email(userData.getEmail())
+                    .genero(generoEnum)
+                    .telefono(userData.getTelefono())
+                    .jugador(jugador)
+                    .verificationToken(verificationToken)
+                    .isVerified(false)
+                    .afiliador(afiliador)
+                    .bondaEnabled(true)
+                    .fcmToken(inputWrapper.getFcmToken())
+                    .build();
+
 
         usuarioRepository.save(nuevoUsuario);
 
-        String htmlBody;
-
-        if (inputWrapper.getN8nWebhookLink() != null){ //Logica para determinar si ingreso por form o por app
-            htmlBody = UsuarioUtils.construirEmailBienvenida(userData.getNombre(), inputWrapper.getN8nWebhookLink() + verificationToken);
-        }else {
-            String verificacionLink = frontVerifyUrl + verificationToken;
-            htmlBody = UsuarioUtils.construirEmailBienvenida(userData.getNombre(), verificacionLink);
-        }
+        String verificacionLink = frontVerifyUrl + verificationToken;
+        String htmlBody = UsuarioUtils.construirEmailBienvenida(userData.getNombre(), verificacionLink);
 
         emailService.enviarCorreo(
                 nuevoUsuario.getEmail(),
@@ -160,13 +174,15 @@ public class UsuarioService {
                 htmlBody
         );
 
+        String accessToken = jwtService.generateAccessToken(nuevoUsuario);
 
-        String token = jwtService.getToken(nuevoUsuario);
+        String refreshToken =  jwtService.generateRefreshToken(nuevoUsuario);
 
         return AuthDTO.AuthResponseDTO.builder()
-                .accessToken(token)
-                .playerData(userData)
-                .build();
+                                      .accessToken(accessToken)
+                                      .playerData(userData)
+                                      .refreshToken(refreshToken)
+                                      .build();
     }
 
     @Async
@@ -195,13 +211,13 @@ public class UsuarioService {
 
 
             Map<String, Object> respuestaApi = restClient.post()
-                    .uri("/register/" + provinciaAlias)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .body(datosAfiliacion)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<Map<String, Object>>() {
-                    });
+                                                         .uri("/register/" + provinciaAlias)
+                                                         .contentType(MediaType.APPLICATION_JSON)
+                                                         .accept(MediaType.APPLICATION_JSON)
+                                                         .body(datosAfiliacion)
+                                                         .retrieve()
+                                                         .body(new ParameterizedTypeReference<Map<String, Object>>() {
+                                                         });
 
 
             System.out.println("---- RESPUESTA RECIBIDA, NOTIFICANDO WEBSOCKET ----");
@@ -242,10 +258,10 @@ public class UsuarioService {
                     dataFCM.put("payload_json", jsonRespuesta);
 
                     NotificacionDTO.NotificacionRequestDTO notifRequest = NotificacionDTO.NotificacionRequestDTO.builder()
-                            .title("¡Afiliación Completada!")
-                            .body("Presiona para ver el estado de tus afiliaciones!")
-                            .data(dataFCM)
-                            .build();
+                                                                                                                .title("¡Afiliación Completada!")
+                                                                                                                .body("Presiona para ver el estado de tus afiliaciones!")
+                                                                                                                .data(dataFCM)
+                                                                                                                .build();
 
                     fcmService.sendNotificationToUser(notifRequest, usuario.getId());
 
@@ -274,7 +290,7 @@ public class UsuarioService {
         websocketService.sendToWebSocket(errorDto);
     }
 
-    public AuthDTO.AuthResponseDTO login(LoginRequestDTO request) {
+    public AuthDTO.AuthResponseDTO   login(LoginRequestDTO request) {
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -284,7 +300,7 @@ public class UsuarioService {
         );
 
         Usuario usuario = usuarioRepository.findByUsernameOrEmail(request.getIdentifier(), request.getIdentifier())
-                .orElseThrow();
+                                           .orElseThrow();
 
         String fcmToken = null;
         if (request.getFcmToken() != null && !request.getFcmToken().isEmpty()) {
@@ -303,10 +319,10 @@ public class UsuarioService {
         String refreshToken = jwtService.generateRefreshToken(usuario);
 
         return AuthDTO.AuthResponseDTO.builder()
-                .accessToken(accessToken)
-                .fcmToken(fcmToken)
-                .refreshToken(refreshToken)
-                .build();
+                                      .accessToken(accessToken)
+                                      .fcmToken(fcmToken)
+                                      .refreshToken(refreshToken)
+                                      .build();
     }
 
     public AuthDTO.AuthResponseDTO refreshToken(String refreshToken) {
@@ -315,7 +331,7 @@ public class UsuarioService {
 
         if (userEmail != null) {
             Usuario usuario = usuarioRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                                               .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
             // Validamos que el refresh token sea válido (firma y expiración)
             if (jwtService.isTokenValid(refreshToken, usuario)) {
@@ -325,9 +341,9 @@ public class UsuarioService {
 
 
                 return AuthDTO.AuthResponseDTO.builder()
-                        .accessToken(newAccessToken)
-                        .refreshToken(refreshToken)
-                        .build();
+                                              .accessToken(newAccessToken)
+                                              .refreshToken(refreshToken)
+                                              .build();
             }
         }
         throw new RuntimeException("Refresh Token inválido o expirado");
@@ -336,7 +352,7 @@ public class UsuarioService {
     public void verificarUsuario(String token) {
 
         Usuario usuario = usuarioRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("El link de verificación es inválido o ya fue utilizado."));
+                                           .orElseThrow(() -> new IllegalArgumentException("El link de verificación es inválido o ya fue utilizado."));
 
         usuario.setVerified(true);
         usuario.setVerificationToken(null);
@@ -345,7 +361,7 @@ public class UsuarioService {
 
     public void solicitarCambioDeContraseña(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("No existe un usuario registrado con este email."));
+                                           .orElseThrow(() -> new IllegalArgumentException("No existe un usuario registrado con este email."));
 
         String verificationToken = UUID.randomUUID().toString();
 
@@ -363,7 +379,7 @@ public class UsuarioService {
 
     public void restablecerContrasena(String token, String newPassword) {
         Usuario usuario = usuarioRepository.findByResetToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("El enlace de recuperación es inválido o ya fue utilizado."));
+                                           .orElseThrow(() -> new IllegalArgumentException("El enlace de recuperación es inválido o ya fue utilizado."));
 
         UsuarioUtils.validarFormatoPassword(newPassword);
 
@@ -390,17 +406,17 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void desafiliar(Long idUsuario){ //soft delete
+    public void desafiliar(Long idUsuario) { //soft delete
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario"));
+                                           .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario"));
 
         Jugador jugador = jugadorRepository.findById(usuario.getJugador().getId())
-            .orElseThrow(() -> new IllegalArgumentException("No se encontró el jugador"));
+                                           .orElseThrow(() -> new IllegalArgumentException("No se encontró el jugador"));
 
-        try{
+        try {
             usuarioRepository.delete(usuario);
             jugadorRepository.delete(jugador);
-        }catch(Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -410,14 +426,14 @@ public class UsuarioService {
     private String iconsContainer;
 
     @Transactional
-    public String cambiarIcono(Long idUsuario, MultipartFile file){
+    public String cambiarIcono(Long idUsuario, MultipartFile file) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario"));
+                                           .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario"));
 
-        if(usuario.getIconUrl() != null){
+        if (usuario.getIconUrl() != null) {
             try {
                 azureBlobService.deleteBlob(usuario.getIconUrl(), iconsContainer);
-            }catch(Exception e){
+            } catch (Exception e) {
                 System.err.println("Error al eliminar la imagen anterior" + e.getMessage());
             }
         }
@@ -429,7 +445,7 @@ public class UsuarioService {
             usuario.setIconUrl(blobUrl);
             usuarioRepository.save(usuario);
             return blobUrl;
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }
     }
@@ -437,7 +453,7 @@ public class UsuarioService {
 
     public List<CasinoDTO.casinosList> listarCasinosAfiliados(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                                           .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         if (usuario.getJugador() == null) {
             throw new RuntimeException("El usuario no tiene un perfil de jugador asociado");
@@ -476,4 +492,12 @@ public class UsuarioService {
         }
     }
 
+    @Scheduled(cron = "0 0 0 * * * ")
+    @Transactional
+    public void procesarUsuariosVencidos() {
+
+        usuarioRepository.desactivarFreeTrialVencidos();
+
+        System.out.println("Usuarios con free trial desactivados.");
+    }
 }

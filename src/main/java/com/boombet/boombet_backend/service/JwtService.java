@@ -20,9 +20,11 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    public String getToken(UserDetails usuario){
+    /*public String getToken(UserDetails usuario){
         return getToken(new HashMap<>(),usuario);
     }
+    */
+
 
     private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60;
 
@@ -47,11 +49,13 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(user.getEmail())
                 .claim("idJugador", jugadorId)
+                .claim("role",user.getRole())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
     @Value("${application.security.jwt.secret-key}")
     private String SECRET_KEY;
 
@@ -61,6 +65,7 @@ public class JwtService {
      * @param userDetails
      * @return
      */
+    /*
     private String getToken(Map<String,Object> extraClaims, UserDetails userDetails) {
 
         Usuario user = (Usuario) userDetails;
@@ -79,6 +84,8 @@ public class JwtService {
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+    */
+
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);

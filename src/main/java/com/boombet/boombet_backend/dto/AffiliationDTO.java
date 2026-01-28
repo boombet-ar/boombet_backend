@@ -42,4 +42,7 @@ public class AffiliationDTO {
     private String cp;
     private String user;
     private String password;
+
+    @JsonProperty("token_afiliador")
+    private String tokenAfiliador;
 }
