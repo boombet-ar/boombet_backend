@@ -5,9 +5,11 @@ import com.boombet.boombet_backend.dto.UserDataRequestDTO;
 import com.boombet.boombet_backend.security.DatadashAuth;
 import com.boombet.boombet_backend.utils.UsuarioUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class DatadashService {
@@ -41,7 +43,9 @@ public class DatadashService {
             throw new RuntimeException("No se pudo obtener el token de acceso para Datadash");
         }
 
-        return restClient.post()
+
+
+        DatadashDTO.DatadashInformResponse userData = restClient.post()
                 .uri("/informes/informe")
                 .headers(headers -> headers.setBearerAuth(token))
                 .contentType(MediaType.APPLICATION_JSON)
@@ -52,4 +56,22 @@ public class DatadashService {
                     throw new IllegalArgumentException("El género seleccionado es incorrecto. Por favor, verificá tus datos e intentalo nuevamente.");
                 })
                 .body(DatadashDTO.DatadashInformResponse.class);
-}}
+
+
+        if (userData == null || userData.datos() == null || userData.datos().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron datos para la persona.");
+        }
+
+
+        validarMayorDeEdad(userData.datos().getFirst().edad());
+        return userData;
+}
+
+    private void validarMayorDeEdad(Integer edad) {
+        if (edad == null || edad < 18) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Debes ser mayor de edad");
+        }
+    }
+
+
+}

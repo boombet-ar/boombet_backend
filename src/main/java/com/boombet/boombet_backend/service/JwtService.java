@@ -33,11 +33,15 @@ public class JwtService {
 
 
     public String generateAccessToken(UserDetails usuario) {
-        return buildToken(new HashMap<>(), usuario, ACCESS_TOKEN_EXPIRATION);
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("token_type", "ACCESS");
+        return buildToken(extraClaims, usuario, ACCESS_TOKEN_EXPIRATION);
     }
 
     public String generateRefreshToken(UserDetails usuario) {
-        return buildToken(new HashMap<>(), usuario, REFRESH_TOKEN_EXPIRATION);
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("token_type", "REFRESH");
+        return buildToken(extraClaims, usuario, REFRESH_TOKEN_EXPIRATION);
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
@@ -89,6 +93,10 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public String extractTokenType(String token) {
+        return extractClaim(token, claims -> claims.get("token_type", String.class));
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {

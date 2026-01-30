@@ -50,6 +50,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // 3. Validar token
                 if (jwtService.isTokenValid(token, userDetails)) {
+
+                    // Validar que sea un ACCESS TOKEN
+                    String tokenType = jwtService.extractTokenType(token);
+                    if (!"ACCESS".equals(tokenType)) {
+                        System.out.println("DEBUG: El token NO es un Access Token (es " + tokenType + "). Rechazando.");
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
                     System.out.println("DEBUG: Token VÁLIDO. Autenticando...");
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

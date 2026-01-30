@@ -71,7 +71,6 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-
         try {
 
             var response = datadashService.getUserData(input);
@@ -114,7 +113,7 @@ public class UsuarioController {
     }
 
 
-    @PostMapping("/auth/reset-password")
+    @PostMapping("/auth/reset-password") //
     public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordDto input) {
         try {
             usuarioService.restablecerContrasena(input.token(), input.newPassword());
@@ -214,7 +213,7 @@ public class UsuarioController {
 
 
 
-    @PostMapping("/auth/refresh")
+    @PostMapping("/auth/refresh") //Ver logica
     public ResponseEntity<AuthDTO.AuthResponseDTO> refreshToken(@RequestBody AuthDTO.RefreshTokenRequestDTO request) {
         try {
             return ResponseEntity.ok(usuarioService.refreshToken(request.refreshToken()));

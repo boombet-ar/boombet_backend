@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.*;
@@ -336,6 +338,12 @@ public class UsuarioService {
             // Validamos que el refresh token sea válido (firma y expiración)
             if (jwtService.isTokenValid(refreshToken, usuario)) {
 
+                // Validar que sea realmente un REFRESH TOKEN
+                String tokenType = jwtService.extractTokenType(refreshToken);
+                if (!"REFRESH".equals(tokenType)) {
+                    throw new RuntimeException("El token proporcionado no es un Refresh Token válido.");
+                }
+
                 // Generamos un NUEVO Access Token
                 String newAccessToken = jwtService.generateAccessToken(usuario);
 
@@ -500,4 +508,7 @@ public class UsuarioService {
 
         System.out.println("Usuarios con free trial desactivados.");
     }
+
+
+
 }
